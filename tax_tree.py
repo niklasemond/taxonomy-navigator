@@ -9,7 +9,7 @@ import pandas as pd
 with open("hierarchical_tax_with_descriptions.json", 'r') as f:
     taxonomy_data = json.load(f)
 
-# Initialize Dash app
+# Initialize Dash app without authentication
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Color mappings for classifications
@@ -26,6 +26,44 @@ TRL_COLORS = {
     'TRL 4-6': 'warning',    # Mid stage - Yellow
     'TRL 7-8': 'info',       # Late stage - Light Blue
     'TRL 9': 'success'       # Deployed - Green
+}
+
+# Add these constants near the top of the file, after the color mappings
+CLASSIFICATION_DESCRIPTIONS = {
+    'CF': """Core Foundational (CF): These technologies are the fundamental building blocks necessary for developing a broad range of applications. They often represent breakthroughs in scientific knowledge or novel engineering principles that serve as a basis for future advancements. CF technologies tend to have long-term impact and widespread applicability across multiple industries and domains.""",
+    
+    'E': """Enabling (E): These are key technologies that facilitate and accelerate the development of practical applications. They provide critical functionalities or infrastructure that allow applied and end-use solutions to function effectively. Enabling technologies often serve as intermediate components, bridging core foundational research and real-world applications.""",
+    
+    'A': """Application (A): These technologies represent integrated and developed solutions aimed at specific use cases or industry applications. Applied technologies are often built upon foundational and enabling technologies, bringing them into practical implementation in fields such as aerospace, cybersecurity, healthcare, energy, and defense""",
+    
+    'EU': """End Use (EU): These are finalized, market-ready solutions that are actively deployed and utilized across industries, defense, and society. End-use technologies are at the highest level of maturity, providing direct benefits to businesses, government agencies, and consumers. They often involve commercially available products, deployed defense systems, or large-scale industrial applications."""
+}
+
+TRL_DESCRIPTIONS = {
+    'TRL 1-3': """Early Stage Research (TRL 1-3):
+    • TRL 1: Basic principles observed and reported
+    • TRL 2: Technology concept and/or application formulated
+    • TRL 3: Analytical and experimental critical function proof-of-concept
+    
+    This stage represents fundamental research and early development, where basic principles are being discovered and initial concepts are being formulated.""",
+    
+    'TRL 4-6': """Technology Development & Demonstration (TRL 4-6):
+    • TRL 4: Component and/or system validation in laboratory environment
+    • TRL 5: Component and/or system validation in relevant environment
+    • TRL 6: System/subsystem model or prototype demonstration in relevant environment
+    
+    This stage represents the development and testing of prototypes and demonstration of technology components in increasingly realistic environments.""",
+    
+    'TRL 7-8': """System Development & Qualification (TRL 7-8):
+    • TRL 7: System prototype demonstration in operational environment
+    • TRL 8: Actual system completed and qualified through test and demonstration
+    
+    This stage represents near-final technology development, where systems are being tested and qualified in operational environments.""",
+    
+    'TRL 9': """Operational Deployment (TRL 9):
+    • TRL 9: Actual system proven through successful mission operations
+    
+    This represents fully mature technology that has been proven through successful operations in its intended environment."""
 }
 
 def generate_tree(taxonomy):
@@ -114,7 +152,17 @@ app.layout = dbc.Container([
     # Enhanced legend with clickable badges
     dbc.Card([
         dbc.CardBody([
-            html.H5("Legend (Click to Filter)", className="card-title"),
+            html.Div([
+                html.H5("Legend (Click to Filter)", className="card-title d-inline-block me-2"),
+                dbc.Button(
+                    "ⓘ",
+                    id="open-modal",
+                    color="link",
+                    size="sm",
+                    className="p-0 align-baseline",
+                    style={"text-decoration": "none"}
+                )
+            ], className="d-flex align-items-center"),
             dbc.Row([
                 dbc.Col([
                     html.H6("Classification Types:", className="mb-2"),
@@ -163,6 +211,28 @@ app.layout = dbc.Container([
             ], className="text-center")
         ])
     ], className="mb-4"),
+    dbc.Modal([
+        dbc.ModalHeader("Classification & TRL Level Descriptions"),
+        dbc.ModalBody([
+            html.H5("Classification Types", className="mb-3"),
+            *[html.Div([
+                html.H6(f"{key}", className="mb-2"),
+                html.P(desc, className="mb-3")
+            ]) for key, desc in CLASSIFICATION_DESCRIPTIONS.items()],
+            
+            html.Hr(),
+            
+            html.H5("Technology Readiness Levels (TRL)", className="mt-4 mb-3"),
+            *[html.Div([
+                html.H6(level, className="mb-2"),
+                html.Pre(desc, className="mb-3", 
+                        style={"white-space": "pre-wrap", "font-family": "inherit"})
+            ]) for level, desc in TRL_DESCRIPTIONS.items()]
+        ]),
+        dbc.ModalFooter(
+            dbc.Button("Close", id="close-modal", className="ms-auto")
+        )
+    ], id="info-modal", size="lg", scrollable=True),
     dbc.Row([
         # Left column - Navigation Tree
         dbc.Col([
@@ -289,5 +359,19 @@ def update_tree(badge_clicks, clear_clicks, badge_ids):
     filtered_data = filter_subcategories(taxonomy_data, active_filters)
     return generate_tree(filtered_data), active_filters_display, badge_clicks
 
+# Add this callback at the end of the file
+@app.callback(
+    Output("info-modal", "is_open"),
+    [Input("open-modal", "n_clicks"), Input("close-modal", "n_clicks")],
+    [State("info-modal", "is_open")],
+    prevent_initial_call=True
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(
+        debug=True      # Enable debug mode for development
+    )
