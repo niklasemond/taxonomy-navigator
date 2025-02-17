@@ -1,0 +1,644 @@
+{
+    "Advanced Computing": {
+        "Subcategories": {
+            "High-performance computing": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in high-performance computing."
+            },
+            "Edge computing": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in edge computing."
+            },
+            "Advanced architectures": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in advanced architectures."
+            },
+            "Cloud computing": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in cloud computing."
+            },
+            "AI applications": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in ai applications."
+            },
+            "Digital twins": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in digital twins."
+            },
+            "Scientific simulations": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in scientific simulations."
+            }
+        },
+        "Description": "Technologies that enhance computing performance, including AI, cloud, and high-performance computing."
+    },
+    "Advanced Engineering Materials": {
+        "Subcategories": {
+            "Novel materials": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in novel materials."
+            },
+            "Material genomics": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in material genomics."
+            },
+            "Smart materials": {
+                "Classification": "E",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in smart materials."
+            },
+            "Aerospace applications": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in aerospace applications."
+            },
+            "Energy storage materials": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in energy storage materials."
+            }
+        },
+        "Description": "Innovative materials engineered for high performance across industries."
+    },
+    "Advanced Gas Turbine Engines": {
+        "Subcategories": {
+            "High-temperature materials": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in high-temperature materials."
+            },
+            "Digital engine control": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in digital engine control."
+            },
+            "Military and commercial propulsion": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in military and commercial propulsion."
+            }
+        },
+        "Description": "State-of-the-art propulsion systems for commercial and military applications."
+    },
+    "Advanced and Networked Sensing": {
+        "Subcategories": {
+            "Advanced sensor technologies": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in advanced sensor technologies."
+            },
+            "Data fusion": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in data fusion."
+            },
+            "RF/optical sensing": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in rf/optical sensing."
+            },
+            "Surveillance": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in surveillance."
+            },
+            "Environmental monitoring": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in environmental monitoring."
+            }
+        },
+        "Description": "Technologies enabling advanced sensing and data integration."
+    },
+    "Advanced Manufacturing": {
+        "Subcategories": {
+            "Additive manufacturing": {
+                "Classification": "CF",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in additive manufacturing."
+            },
+            "Nanomanufacturing": {
+                "Classification": "CF",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in nanomanufacturing."
+            },
+            "Smart factories": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in smart factories."
+            },
+            "Aerospace production": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in aerospace production."
+            },
+            "Biomedical manufacturing": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in biomedical manufacturing."
+            }
+        },
+        "Description": "Innovations in manufacturing techniques, including additive manufacturing and automation."
+    },
+    "Artificial Intelligence": {
+        "Subcategories": {
+            "Machine learning": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in machine learning."
+            },
+            "Deep learning": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in deep learning."
+            },
+            "AI safety & trust": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in ai safety & trust."
+            },
+            "Generative models": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in generative models."
+            },
+            "AI for scientific discovery": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in ai for scientific discovery."
+            },
+            "Autonomous decision-making": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in autonomous decision-making."
+            }
+        },
+        "Description": "AI-driven technologies including machine learning, deep learning, and autonomous systems."
+    },
+    "Biotechnologies": {
+        "Subcategories": {
+            "Synthetic biology": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in synthetic biology."
+            },
+            "Computational biology": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in computational biology."
+            },
+            "Biomanufacturing": {
+                "Classification": "E",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in biomanufacturing."
+            },
+            "Nanomedicine": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in nanomedicine."
+            },
+            "Biohybrid technologies": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in biohybrid technologies."
+            }
+        },
+        "Description": "Cutting-edge biotech applications including synthetic biology and nanomedicine."
+    },
+    "Clean Energy": {
+        "Subcategories": {
+            "Fusion energy": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in fusion energy."
+            },
+            "Advanced battery chemistry": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in advanced battery chemistry."
+            },
+            "Grid integration": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in grid integration."
+            },
+            "Renewable power": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in renewable power."
+            },
+            "Electric transportation": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in electric transportation."
+            }
+        },
+        "Description": "Next-generation energy solutions including fusion energy and renewable power."
+    },
+    "Cybersecurity & Data Privacy": {
+        "Subcategories": {
+            "Post-quantum cryptography": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in post-quantum cryptography."
+            },
+            "Privacy-enhancing tech": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in privacy-enhancing tech."
+            },
+            "Secure computing": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in secure computing."
+            },
+            "Digital identity & authentication": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in digital identity & authentication."
+            },
+            "Infrastructure protection": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in infrastructure protection."
+            }
+        },
+        "Description": "Technologies for securing digital information and protecting privacy."
+    },
+    "Directed Energy": {
+        "Subcategories": {
+            "High-power lasers": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in high-power lasers."
+            },
+            "Particle beams": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in particle beams."
+            },
+            "Missile defense": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in missile defense."
+            },
+            "Counter-drone systems": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in counter-drone systems."
+            }
+        },
+        "Description": "High-powered energy systems for defense and commercial applications."
+    },
+    "Autonomous & Uncrewed Systems": {
+        "Subcategories": {
+            "High-definition mapping": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in high-definition mapping."
+            },
+            "Autonomous control algorithms": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in autonomous control algorithms."
+            },
+            "Self-driving cars": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in self-driving cars."
+            },
+            "Military drones": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in military drones."
+            },
+            "Industrial automation": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in industrial automation."
+            }
+        },
+        "Description": "AI-powered and autonomous technologies for transportation and defense."
+    },
+    "Human-Machine Interfaces": {
+        "Subcategories": {
+            "Brain-computer interfaces": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in brain-computer interfaces."
+            },
+            "Augmented reality": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in augmented reality."
+            },
+            "Neurotechnology": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in neurotechnology."
+            },
+            "Immersive training": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in immersive training."
+            },
+            "Medical prosthetics": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in medical prosthetics."
+            }
+        },
+        "Description": "Interfaces bridging humans and machines, including brain-computer interfaces."
+    },
+    "Hypersonics": {
+        "Subcategories": {
+            "Hypersonic propulsion": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in hypersonic propulsion."
+            },
+            "Aerodynamics & control": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in aerodynamics & control."
+            },
+            "Advanced materials for hypersonics": {
+                "Classification": "E",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in advanced materials for hypersonics."
+            },
+            "High-speed missiles": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in high-speed missiles."
+            },
+            "Spaceplane technology": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in spaceplane technology."
+            }
+        },
+        "Description": "Technologies enabling high-speed flight and missile systems."
+    },
+    "Communications & Networking": {
+        "Subcategories": {
+            "RF circuits & antennas": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in rf circuits & antennas."
+            },
+            "Satellite-based networks": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in satellite-based networks."
+            },
+            "6G technologies": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in 6g technologies."
+            },
+            "Global connectivity": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in global connectivity."
+            },
+            "Resilient internet": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in resilient internet."
+            }
+        },
+        "Description": "Advanced communication systems including satellite networks and 6G."
+    },
+    "Positioning, Navigation & Timing": {
+        "Subcategories": {
+            "Alternative navigation": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in alternative navigation."
+            },
+            "Anti-jamming technologies": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in anti-jamming technologies."
+            },
+            "GPS alternatives": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in gps alternatives."
+            },
+            "Military navigation": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in military navigation."
+            },
+            "Autonomous vehicle positioning": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in autonomous vehicle positioning."
+            }
+        },
+        "Description": "Technologies ensuring precision navigation and secure timing systems."
+    },
+    "Quantum Technologies": {
+        "Subcategories": {
+            "Quantum computing": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in quantum computing."
+            },
+            "Quantum sensing": {
+                "Classification": "CF",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in quantum sensing."
+            },
+            "Quantum networks": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in quantum networks."
+            },
+            "Secure quantum communication": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in secure quantum communication."
+            },
+            "Ultra-precise measurements": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in ultra-precise measurements."
+            }
+        },
+        "Description": "Quantum-based computing, networking, and sensing applications."
+    },
+    "Semiconductors & Microelectronics": {
+        "Subcategories": {
+            "Advanced chip design": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in advanced chip design."
+            },
+            "Beyond-CMOS technologies": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 1-3",
+                "Description": "Technological advancements in beyond-cmos technologies."
+            },
+            "MEMS & NEMS": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in mems & nems."
+            },
+            "AI chips": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in ai chips."
+            },
+            "IoT devices": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in iot devices."
+            },
+            "Embedded systems": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in embedded systems."
+            }
+        },
+        "Description": "Next-gen semiconductor and microelectronics technologies."
+    },
+    "Space Technologies": {
+        "Subcategories": {
+            "Advanced propulsion": {
+                "Classification": "CF",
+                "Supply Chain Classification": "RMC",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in advanced propulsion."
+            },
+            "Space-based manufacturing": {
+                "Classification": "E",
+                "Supply Chain Classification": "MF",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in space-based manufacturing."
+            },
+            "Energy transmission in space": {
+                "Classification": "E",
+                "Supply Chain Classification": "CET",
+                "TRL-Based Classification": "TRL 4-6",
+                "Description": "Technological advancements in energy transmission in space."
+            },
+            "Deep space exploration": {
+                "Classification": "A",
+                "Supply Chain Classification": "ASI",
+                "TRL-Based Classification": "TRL 7-8",
+                "Description": "Technological advancements in deep space exploration."
+            },
+            "Satellite services": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in satellite services."
+            },
+            "In-space habitats": {
+                "Classification": "EU",
+                "Supply Chain Classification": "EUP",
+                "TRL-Based Classification": "TRL 9",
+                "Description": "Technological advancements in in-space habitats."
+            }
+        },
+        "Description": "Innovations in space exploration, satellite services, and propulsion."
+    }
+}
