@@ -11,6 +11,7 @@ import secrets
 from secret_key import generate_secret_key
 from auth import User, users, init_login_manager
 from werkzeug.security import check_password_hash
+from database import init_database
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +29,9 @@ class User(UserMixin):
 
 # Initialize the main app
 try:
+    # Initialize database before creating app
+    init_database()
+    
     app = dash.Dash(
         __name__, 
         external_stylesheets=[dbc.themes.BOOTSTRAP],

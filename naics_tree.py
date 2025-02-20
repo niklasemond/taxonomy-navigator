@@ -1,8 +1,20 @@
 import json
 import dash
-from dash import dcc, html, Input, Output, State
+from dash import dcc, html, Input, Output, State, ALL, MATCH
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
+from database import (
+    get_all_categories,
+    get_subcategories,
+    get_sub_subcategories,
+    filter_taxonomy,
+    get_distinct_values,
+    get_db_connection
+)
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Color mappings for classifications
 FUNCTION_COLORS = {
@@ -33,178 +45,407 @@ SUPPLY_CHAIN_COLORS = {
 }
 
 def process_naics_data(data):
-    """Convert flat list structure into hierarchical dictionary"""
-    organized_data = {}
-    
-    # Debug: Print first item to see its structure
-    if data:
-        print("Sample data item:")
-        print(json.dumps(data[0], indent=2))
-    
-    for item in data:
-        category = item['Category']
-        subcategory = item['Subcategory']
-        sub_subcategory = item['Potential Sub-Subcategory']
-        naics_code = item['NAICS Code']
-        naics_desc = item['NAICS Description']
-        sub_naics_code = item['Sub-Subcategory NAICS Code']
-        sub_naics_desc = item['Sub-Subcategory NAICS Description']
-        potential_apps = item['Potential Applications']
-        
-        # Debug: Print the classification fields
-        print(f"Function: {item.get('Function', 'Not found')}")
-        print(f"Supply Chain Position: {item.get('Supply Chain Position', 'Not found')}")
-        print(f"TRL: {item.get('TRL', 'Not found')}")
-        
-        # Skip empty entries
-        if not category:
-            continue
-            
-        # Initialize category if it doesn't exist
-        if category not in organized_data:
-            organized_data[category] = {
-                'children': {},
-                'code': '',
-                'description': ''
-            }
-        
-        # Initialize subcategory if it doesn't exist
-        if subcategory not in organized_data[category]['children']:
-            organized_data[category]['children'][subcategory] = {
-                'children': {},
-                'code': naics_code,
-                'description': naics_desc,
-                'Potential Applications': potential_apps,
-                'Function': item.get('Function', ''),
-                'Supply Chain Position': item.get('Supply Chain Position', ''),
-                'TRL': item.get('TRL', '')
-            }
-        
-        # Add sub-subcategory if it exists and isn't "N/A"
-        if sub_subcategory and sub_subcategory != "N/A":
-            organized_data[category]['children'][subcategory]['children'][sub_subcategory] = {
-                'code': sub_naics_code,
-                'description': sub_naics_desc,
-                'Potential Applications': potential_apps,
-                'Function': item.get('Function', ''),
-                'Supply Chain Position': item.get('Supply Chain Position', ''),
-                'TRL': item.get('TRL', '')
-            }
-    
-    # Debug: Print a sample of processed data
-    if organized_data:
-        first_category = next(iter(organized_data))
-        print("\nProcessed data sample:")
-        print(json.dumps({first_category: organized_data[first_category]}, indent=2))
-    
-    return organized_data
+    """This function is deprecated - using database instead"""
+    pass
 
-# Load and process NAICS JSON data
-with open("tax_5-1.json", 'r') as f:  # Updated to use new file
-    raw_data = json.load(f)
-    naics_data = process_naics_data(raw_data)
+def filter_naics_data(data, active_filters):
+    """Filter NAICS data based on active filters"""
+    if not active_filters:
+        return data
+    # ... rest of the function ...
+    return filtered_data
 
-# After loading the data
-print("\nInitial data structure check:")
-print("Top level categories:", list(naics_data.keys()))
-if naics_data:
-    first_cat = next(iter(naics_data))
-    first_subcat = next(iter(naics_data[first_cat]['children']))
-    print(f"\nSample subcategory data for {first_cat} -> {first_subcat}:")
-    print(json.dumps(naics_data[first_cat]['children'][first_subcat], indent=2))
+# Remove JSON debug code and initialization
+naics_data = None
 
-def generate_naics_tree(taxonomy):
-    """Generate the navigation tree from NAICS taxonomy data"""
-    tree_elements = []
+def generate_naics_tree(filtered_data=None):
+    """Generate the NAICS tree from database data"""
+    tree_items = []
     
-    for level1, level1_details in taxonomy.items():
-        level2_items = []
-        
-        for level2, level2_details in level1_details.get('children', {}).items():
-            level3_items = []
+    try:
+        # Get all categories
+        if filtered_data is None:
+            categories = [row['category'] for row in get_all_categories()]
+        else:
+            categories = set(row['category'] for row in filtered_data)
             
-            # Create level 3 items (sub-subcategories)
-            for level3, level3_details in level2_details.get('children', {}).items():
-                if level3 != "N/A":
-                    level3_items.append(
-                        dbc.ListGroupItem([
-                            html.Div([
-                                html.Span(f"{level3_details.get('code', '')} - {level3}", className="me-2"),
-                                dbc.Badge(
-                                    level3_details.get('Function', ''),
-                                    color=FUNCTION_COLORS.get(level3_details.get('Function', ''), 'secondary'),
-                                    className="me-1"
-                                ),
-                                dbc.Badge(
-                                    level3_details.get('TRL', ''),
-                                    color=TRL_COLORS.get(level3_details.get('TRL', ''), 'secondary'),
-                                    className="me-1"
-                                ),
-                                dbc.Badge(
-                                    level3_details.get('Supply Chain Position', ''),
-                                    color=SUPPLY_CHAIN_COLORS.get(level3_details.get('Supply Chain Position', ''), 'secondary'),
-                                    className="me-1"
-                                )
-                            ], style={'display': 'flex', 'alignItems': 'center', 'flexWrap': 'wrap'})
-                        ],
-                        id={'type': 'level3-item', 'level1': level1, 'level2': level2, 'level3': level3},
-                        action=True,
-                        className="ms-4"
-                        )
-                    )
-            
-            # Create level 2 items (subcategories)
-            level2_items.append(
-                html.Div([
-                    dbc.ListGroupItem([
-                        html.Div([
-                            html.Span(f"{level2_details.get('code', '')} - {level2}", className="me-2"),
-                            dbc.Badge(
-                                level2_details.get('Function', ''),
-                                color=FUNCTION_COLORS.get(level2_details.get('Function', ''), 'secondary'),
-                                className="me-1"
-                            ),
-                            dbc.Badge(
-                                level2_details.get('TRL', ''),
-                                color=TRL_COLORS.get(level2_details.get('TRL', ''), 'secondary'),
-                                className="me-1"
-                            ),
-                            dbc.Badge(
-                                level2_details.get('Supply Chain Position', ''),
-                                color=SUPPLY_CHAIN_COLORS.get(level2_details.get('Supply Chain Position', ''), 'secondary'),
-                                className="me-1"
-                            )
-                        ], style={'display': 'flex', 'alignItems': 'center', 'flexWrap': 'wrap'})
-                    ],
-                    id={'type': 'level2-item', 'level1': level1, 'level2': level2},
-                    action=True
-                    ),
-                    *level3_items
-                ])
-            )
-        
-        tree_elements.append(
-            dbc.Card([
+        for category in sorted(categories):
+            # Get subcategories
+            if filtered_data is None:
+                subcategories = get_subcategories(category)
+            else:
+                subcategories = [row for row in filtered_data if row['category'] == category]
+                
+            # Create collapsible card for each category
+            category_item = dbc.Card([
                 dbc.CardHeader(
                     dbc.Button(
-                        level1,
-                        id={'type': 'level1-button', 'level1': level1},
+                        category,
+                        id={"type": "category-collapse-button", "index": category},
                         color="link",
-                        className="text-left w-100"
-                    )
+                        className="text-decoration-none d-flex justify-content-between align-items-center"
+                    ),
+                    className="p-0"
                 ),
                 dbc.Collapse(
-                    dbc.ListGroup(level2_items, flush=True),
-                    id={'type': 'level1-collapse', 'level1': level1},
+                    dbc.CardBody([
+                        dbc.ListGroup([
+                            # Make each subcategory collapsible
+                            dbc.Card([
+                                dbc.CardHeader(
+                                    html.Div([
+                                        # Clickable subcategory content first
+                                        html.Div([
+                                            # Header row with subcategory name and NAICS code
+                                            html.Div([
+                                                html.Strong(f"{subcat['subcategory']} "),
+                                                html.Small(f"({subcat['naics_code']})", className="text-muted"),
+                                            ]),
+                                            # Description row
+                                            html.Div(subcat['naics_description'], 
+                                                    className="text-muted small"),
+                                            # Badges row
+                                            html.Div([
+                                                create_badge("Function", subcat['function']),
+                                                create_badge("Supply Chain", subcat['supply_chain_position']),
+                                                create_badge("TRL", subcat['trl']),
+                                            ], className="mt-1"),
+                                            # Applications row
+                                            html.Div(subcat['potential_applications'], 
+                                                    className="text-muted small")
+                                        ],
+                                        id={"type": "subcategory-item", "index": subcat['subcategory']},
+                                        n_clicks=0,
+                                        className="subcategory-content"
+                                        ),
+                                        # Collapse button below content
+                                        html.Div([
+                                            dbc.Button(
+                                                html.I(className="fas fa-chevron-down"),
+                                                id={"type": "subcategory-collapse-button", 
+                                                    "index": f"{category}-{subcat['subcategory']}"},
+                                                color="light",
+                                                size="sm",
+                                                className="collapse-button"
+                                            )
+                                        ], className="d-flex justify-content-center mt-2")
+                                    ], className="flex-column"),
+                                    className="p-2"
+                                ),
+                                dbc.Collapse(
+                                    dbc.CardBody([
+                                        # Only show sub-subcategories in the collapse
+                                        dbc.ListGroup([
+                                            dbc.ListGroupItem([
+                                                html.Div([
+                                                    html.Strong(f"{sub['sub_subcategory']} "),
+                                                    html.Small(f"({sub['sub_naics_code']})", className="text-muted"),
+                                                    html.Div(sub['sub_naics_description'], className="text-muted small"),
+                                                    html.Div([
+                                                        create_badge("Function", sub['function']),
+                                                        create_badge("Supply Chain", sub['supply_chain_position']),
+                                                        create_badge("TRL", sub['trl']),
+                                                    ], className="mt-2"),
+                                                    html.Div(sub['potential_applications'], 
+                                                           className="text-muted small mt-2")
+                                                ])
+                                            ],
+                                            id={"type": "sub-subcategory-item", "index": sub['sub_subcategory']},
+                                            n_clicks=0,
+                                            action=True,
+                                            className="sub-subcategory-item"
+                                            ) for sub in get_sub_subcategories(category, subcat['subcategory']) 
+                                              if sub['sub_subcategory']
+                                        ], flush=True) if get_sub_subcategories(category, subcat['subcategory']) 
+                                        else html.Div("No 3rd layer", className="text-muted text-center p-3")
+                                    ]),
+                                    id={"type": "subcategory-collapse", 
+                                        "index": f"{category}-{subcat['subcategory']}"},
+                                    is_open=False
+                                )
+                            ], className="mb-2 subcategory-card")
+                            for subcat in subcategories
+                        ], flush=True)
+                    ]),
+                    id={"type": "category-collapse", "index": category},
                     is_open=False
                 )
             ], className="mb-2")
-        )
-    
-    return tree_elements
+            tree_items.append(category_item)
+        
+        return html.Div(tree_items)
+        
+    except Exception as e:
+        logger.error(f"Error generating NAICS tree: {str(e)}")
+        return html.Div(f"Error loading taxonomy data: {str(e)}")
 
-# Create the layout first
+def create_badge(label, value):
+    """Helper function to create colored badges"""
+    if not value:
+        return None
+        
+    if label == "Function":
+        color = FUNCTION_COLORS.get(value, 'secondary')
+    elif label == "TRL":
+        color = TRL_COLORS.get(value.replace('TRL ', ''), 'secondary')
+    else:  # Supply Chain
+        color = SUPPLY_CHAIN_COLORS.get(value, 'secondary')
+        
+    return dbc.Badge(
+        f"{value}",
+        color=color,
+        className="me-1"
+    )
+
+def create_filter_section():
+    """Create filter buttons from database values"""
+    function_values = get_distinct_values('function')
+    trl_values = get_distinct_values('trl')
+    supply_chain_values = get_distinct_values('supply_chain_position')
+    
+    # Create filter buttons
+    # ... (rest of the filter creation code remains similar)
+
+def register_callbacks(app):
+    """Register callbacks for the NAICS tree"""
+    @app.callback(
+        [Output("naics-tree", "children"),
+         Output("naics-active-filters", "children")],
+        [Input({'type': 'function-filter', 'value': ALL}, 'n_clicks'),
+         Input({'type': 'trl-filter', 'value': ALL}, 'n_clicks'),
+         Input({'type': 'supply-chain-filter', 'value': ALL}, 'n_clicks'),
+         Input("naics-clear-filters", "n_clicks")],
+        [State({'type': 'function-filter', 'value': ALL}, 'id'),
+         State({'type': 'trl-filter', 'value': ALL}, 'id'),
+         State({'type': 'supply-chain-filter', 'value': ALL}, 'id'),
+         State("filter-mode-and", "active")]
+    )
+    def update_filters(func_clicks, trl_clicks, supply_clicks, clear_clicks,
+                      func_ids, trl_ids, supply_ids, and_mode):
+        if not dash.callback_context.triggered:
+            raise PreventUpdate
+            
+        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+        
+        # Handle clear filters
+        if triggered == "naics-clear-filters" and clear_clicks:
+            return generate_naics_tree(), "No active filters"
+            
+        # Get active filters
+        active_filters = {
+            'function': [],
+            'trl': [],
+            'supply_chain_position': []
+        }
+        
+        # Check which filters are active based on clicks
+        for clicks, ids, filter_type in [
+            (func_clicks, func_ids, 'function'),
+            (trl_clicks, trl_ids, 'trl'),
+            (supply_clicks, supply_ids, 'supply_chain_position')
+        ]:
+            if clicks and ids:
+                for n, id_dict in zip(clicks, ids):
+                    if n and n % 2:  # Button is active (odd number of clicks)
+                        value = id_dict['value']
+                        if filter_type == 'trl':
+                            value = f"TRL {value}"  # Add TRL prefix to match database
+                        active_filters[filter_type].append(value)
+        
+        # If no filters are active, return full tree
+        if not any(active_filters.values()):
+            return generate_naics_tree(), "No active filters"
+            
+        # Apply filters to database query
+        filtered_data = apply_filters(active_filters, and_mode)
+        
+        # Create active filters display
+        active_filters_display = []
+        for filter_type, values in active_filters.items():
+            if values:
+                if filter_type == 'function':
+                    badges = [dbc.Badge(v, color=FUNCTION_COLORS.get(v, 'secondary'), className="me-1") for v in values]
+                elif filter_type == 'trl':
+                    badges = [dbc.Badge(v, color=TRL_COLORS.get(v.replace('TRL ', ''), 'secondary'), className="me-1") for v in values]
+                else:  # supply_chain_position
+                    badges = [dbc.Badge(v, color=SUPPLY_CHAIN_COLORS.get(v, 'secondary'), className="me-1") for v in values]
+                active_filters_display.extend(badges)
+        
+        if not active_filters_display:
+            active_filters_display = "No active filters"
+            
+        return generate_naics_tree(filtered_data), html.Div(active_filters_display)
+
+    def apply_filters(active_filters, and_mode):
+        """Apply filters to database query"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                where_clauses = []
+                params = []
+                
+                # Build WHERE clause for each filter type
+                for field, values in active_filters.items():
+                    if values:
+                        if and_mode:
+                            # AND mode: each filter type must match one of its values
+                            where_clauses.append(f"{field} IN ({','.join(['?'] * len(values))})")
+                            params.extend(values)
+                        else:
+                            # OR mode: combine all conditions with OR
+                            where_clauses.extend([f"{field} = ?" for _ in values])
+                            params.extend(values)
+                
+                # Combine clauses based on filter mode
+                if where_clauses:
+                    where_sql = " AND " if and_mode else " OR "
+                    where_sql = where_sql.join(where_clauses)
+                    
+                    query = f"""
+                        SELECT *
+                        FROM taxonomy
+                        WHERE {where_sql}
+                        ORDER BY category, subcategory, sub_subcategory
+                    """
+                    
+                    cursor.execute(query, params)
+                    return cursor.fetchall()
+                
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error applying filters: {str(e)}")
+            return None
+
+    @app.callback(
+        Output("naics-details-panel", "children"),
+        [Input({"type": "subcategory-item", "index": ALL}, "n_clicks"),
+         Input({"type": "sub-subcategory-item", "index": ALL}, "n_clicks")],
+        prevent_initial_call=True
+    )
+    def update_details(subcategory_clicks, sub_subcategory_clicks):
+        """Update the details panel when an item is clicked"""
+        if not dash.callback_context.triggered:
+            raise PreventUpdate
+            
+        # Get the clicked item's ID
+        triggered = dash.callback_context.triggered[0]
+        clicked_prop_id = triggered['prop_id']
+        
+        try:
+            clicked_dict = json.loads(clicked_prop_id.split('.')[0])
+            clicked_type = clicked_dict['type']
+            clicked_id = clicked_dict['index']
+            
+            logger.info(f"Clicked item: type={clicked_type}, id={clicked_id}")
+            
+            # Get the selected item's data from the database
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                if clicked_type == "subcategory-item":
+                    cursor.execute("""
+                        SELECT * FROM taxonomy 
+                        WHERE subcategory = ? 
+                        AND (sub_subcategory IS NULL OR sub_subcategory = '')
+                        LIMIT 1
+                    """, (clicked_id,))
+                else:  # sub-subcategory-item
+                    cursor.execute("""
+                        SELECT * FROM taxonomy 
+                        WHERE sub_subcategory = ?
+                        LIMIT 1
+                    """, (clicked_id,))
+                
+                item = cursor.fetchone()
+                
+                if not item:
+                    logger.warning(f"No data found for {clicked_type} with id {clicked_id}")
+                    return "No details available for this selection"
+                
+                logger.info(f"Found item data: {dict(item)}")
+                
+                # Create detailed view
+                title = item['sub_subcategory'] if clicked_type == "sub-subcategory-item" else item['subcategory']
+                code = item['sub_naics_code'] if clicked_type == "sub-subcategory-item" else item['naics_code']
+                description = item['sub_naics_description'] if clicked_type == "sub-subcategory-item" else item['naics_description']
+                
+                return dbc.Card([
+                    dbc.CardHeader(html.H4(title)),
+                    dbc.CardBody([
+                        html.H5("NAICS Information"),
+                        html.P([
+                            html.Strong("Code: "),
+                            html.Span(code),
+                        ]),
+                        html.P([
+                            html.Strong("Description: "),
+                            html.Span(description),
+                        ]),
+                        html.H5("Classification", className="mt-3"),
+                        html.Div([
+                            create_badge("Function", item['function']),
+                            create_badge("Supply Chain", item['supply_chain_position']),
+                            create_badge("TRL", item['trl']),
+                        ]),
+                        html.H5("Potential Applications", className="mt-3"),
+                        html.P(item['potential_applications']),
+                    ])
+                ])
+                
+        except Exception as e:
+            logger.error(f"Error updating details: {str(e)}")
+            return f"Error loading details: {str(e)}"
+
+    # Add callback for filter mode toggle
+    @app.callback(
+        [Output("filter-mode-and", "active"),
+         Output("filter-mode-or", "active")],
+        [Input("filter-mode-and", "n_clicks"),
+         Input("filter-mode-or", "n_clicks")]
+    )
+    def toggle_filter_mode(and_clicks, or_clicks):
+        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+        if triggered == "filter-mode-and":
+            return True, False
+        elif triggered == "filter-mode-or":
+            return False, True
+        return True, False  # Default to AND
+
+    @app.callback(
+        Output({"type": "category-collapse", "index": MATCH}, "is_open"),
+        Input({"type": "category-collapse-button", "index": MATCH}, "n_clicks"),
+        State({"type": "category-collapse", "index": MATCH}, "is_open"),
+    )
+    def toggle_category_collapse(n_clicks, is_open):
+        if n_clicks:
+            return not is_open
+        return is_open
+
+    @app.callback(
+        Output({"type": "subcategory-collapse", "index": MATCH}, "is_open"),
+        Input({"type": "subcategory-collapse-button", "index": MATCH}, "n_clicks"),
+        State({"type": "subcategory-collapse", "index": MATCH}, "is_open"),
+    )
+    def toggle_subcategory_collapse(n_clicks, is_open):
+        if n_clicks:
+            return not is_open
+        return is_open
+
+# Create the layout - fix indentation by moving it to module level
 naics_layout = dbc.Container([
+    # Add Font Awesome
+    html.Link(
+        rel="stylesheet",
+        href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    ),
+    # Replace html.Style with dbc.Container for CSS
+    dbc.Container([
+        html.Link(
+            rel='stylesheet',
+            href='/assets/style.css'
+        )
+    ]),
     html.H1("NAICS Taxonomy Navigator", className="my-4"),
     # Add Filter Panel
     dbc.Card([
@@ -307,7 +548,7 @@ naics_layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             html.Div(
-                generate_naics_tree(naics_data),
+                generate_naics_tree(),  # No argument needed, will load from database
                 id="naics-tree",
                 className="border rounded p-3"
             )
@@ -321,283 +562,3 @@ naics_layout = dbc.Container([
         ], width=8)
     ])
 ], fluid=True)
-
-def filter_naics_data(data, active_filters, filter_mode="AND"):
-    """Filter NAICS data based on active filters"""
-    print(f"\nFiltering with mode: {filter_mode}")
-    print(f"Active filters: {active_filters}")
-    
-    if not active_filters:
-        return data
-        
-    filtered_data = {}
-    for level1, level1_details in data.items():
-        filtered_level2 = {}
-        
-        # Process level2 items
-        for level2, level2_details in level1_details.get('children', {}).items():
-            # Check level2 against filters
-            level2_matches = []
-            for filter_type, filter_value in active_filters.items():
-                actual_value = level2_details.get(filter_type)
-                
-                if actual_value is None:
-                    level2_matches.append(False)
-                    continue
-                
-                if filter_type == 'TRL':
-                    # Strip 'TRL ' from both values for comparison
-                    actual_trl = actual_value.replace('TRL ', '')
-                    filter_trl = filter_value.replace('TRL ', '')
-                    level2_matches.append(actual_trl == filter_trl)
-                else:
-                    level2_matches.append(actual_value == filter_value)
-            
-            # Process level3 items
-            filtered_level3 = {}
-            for level3, level3_details in level2_details.get('children', {}).items():
-                level3_matches = []
-                for filter_type, filter_value in active_filters.items():
-                    actual_value = level3_details.get(filter_type)
-                    
-                    if actual_value is None:
-                        level3_matches.append(False)
-                        continue
-                    
-                    if filter_type == 'TRL':
-                        actual_trl = actual_value.replace('TRL ', '')
-                        filter_trl = filter_value.replace('TRL ', '')
-                        level3_matches.append(actual_trl == filter_trl)
-                    else:
-                        level3_matches.append(actual_value == filter_value)
-                
-                # Include level3 item if it matches the filter criteria
-                if filter_mode == "AND":
-                    if all(level3_matches):
-                        filtered_level3[level3] = level3_details
-                else:  # OR mode
-                    if any(level3_matches):
-                        filtered_level3[level3] = level3_details
-            
-            # Include level2 if either:
-            # 1. It matches the filters directly
-            # 2. It has matching children (level3 items)
-            level2_should_include = False
-            if filter_mode == "AND":
-                if all(level2_matches):
-                    level2_should_include = True
-            else:  # OR mode
-                if any(level2_matches):
-                    level2_should_include = True
-            
-            if level2_should_include or filtered_level3:
-                filtered_level2[level2] = level2_details.copy()
-                if filtered_level3:
-                    filtered_level2[level2]['children'] = filtered_level3
-                else:
-                    filtered_level2[level2]['children'] = {}
-        
-        # Include level1 if it has any matching children
-        if filtered_level2:
-            filtered_data[level1] = {
-                'children': filtered_level2,
-                'code': level1_details.get('code', ''),
-                'description': level1_details.get('description', '')
-            }
-    
-    print(f"Filtered data contains {len(filtered_data)} top-level categories")
-    return filtered_data
-
-def register_callbacks(app):
-    @app.callback(
-        Output('naics-details-panel', 'children'),
-        [Input({'type': 'level2-item', 'level1': dash.ALL, 'level2': dash.ALL}, 'n_clicks'),
-        Input({'type': 'level3-item', 'level1': dash.ALL, 'level2': dash.ALL, 'level3': dash.ALL}, 'n_clicks')],
-        prevent_initial_call=True
-    )
-    def display_details(level2_clicks, level3_clicks):
-        ctx = dash.callback_context
-        if not ctx.triggered:
-            return "Select a subcategory to view details"
-        
-        triggered_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
-        level1 = triggered_id['level1']
-        level2 = triggered_id['level2']
-        
-        if 'level3' in triggered_id:
-            level3 = triggered_id['level3']
-            details = naics_data[level1]['children'][level2]['children'][level3]
-            title = f"{details.get('code', '')} - {level3}"
-        else:
-            details = naics_data[level1]['children'][level2]
-            title = f"{details.get('code', '')} - {level2}"
-        
-        return html.Div([
-            html.H3(title, className="mb-3"),
-            html.Div([
-                html.Strong("Description: "),
-                html.Span(details.get('description', ''))
-            ], className="mb-3"),
-            html.Div([
-                html.Strong("Function: "),
-                dbc.Badge(
-                    details.get('Function', ''),
-                    color=FUNCTION_COLORS.get(details.get('Function', ''), 'secondary'),
-                    className="ms-2"
-                )
-            ], className="mb-2"),
-            html.Div([
-                html.Strong("TRL: "),
-                dbc.Badge(
-                    details.get('TRL', ''),
-                    color=TRL_COLORS.get(details.get('TRL', ''), 'secondary'),
-                    className="ms-2"
-                )
-            ], className="mb-2"),
-            html.Div([
-                html.Strong("Supply Chain Position: "),
-                dbc.Badge(
-                    details.get('Supply Chain Position', ''),
-                    color=SUPPLY_CHAIN_COLORS.get(details.get('Supply Chain Position', ''), 'secondary'),
-                    className="ms-2"
-                )
-            ], className="mb-3"),
-            html.Div([
-                html.Strong("Potential Applications:"),
-                html.Ul([
-                    html.Li(app.strip()) 
-                    for app in details.get('Potential Applications', '').split(', ')
-                    if app.strip()
-                ], className="mb-0")
-            ], className="mb-3")
-        ])
-
-    @app.callback(
-        Output({'type': 'level1-collapse', 'level1': dash.MATCH}, 'is_open'),
-        Input({'type': 'level1-button', 'level1': dash.MATCH}, 'n_clicks'),
-        State({'type': 'level1-collapse', 'level1': dash.MATCH}, 'is_open'),
-        prevent_initial_call=True
-    )
-    def toggle_level1(n_clicks, is_open):
-        if n_clicks:
-            return not is_open
-        return is_open
-
-    @app.callback(
-        [Output("filter-mode-and", "active"),
-         Output("filter-mode-or", "active"),
-         Output("filter-mode-and", "outline"),
-         Output("filter-mode-or", "outline")],
-        [Input("filter-mode-and", "n_clicks"),
-         Input("filter-mode-or", "n_clicks")],
-        [State("filter-mode-and", "active"),
-         State("filter-mode-or", "active")],
-        prevent_initial_call=True
-    )
-    def toggle_filter_mode(and_clicks, or_clicks, and_active, or_active):
-        ctx = dash.callback_context
-        if not ctx.triggered:
-            return True, False, False, True  # Default to AND
-            
-        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        if button_id == "filter-mode-and":
-            return True, False, False, True  # AND active, OR inactive
-        elif button_id == "filter-mode-or":
-            return False, True, True, False  # OR active, AND inactive
-        
-        return and_active, or_active, not and_active, not or_active
-
-    @app.callback(
-        [Output("naics-tree", "children"),
-         Output("naics-active-filters", "children"),
-         Output({'type': 'function-filter', 'value': dash.ALL}, 'n_clicks'),
-         Output({'type': 'trl-filter', 'value': dash.ALL}, 'n_clicks'),
-         Output({'type': 'supply-chain-filter', 'value': dash.ALL}, 'n_clicks')],
-        [Input({'type': 'function-filter', 'value': dash.ALL}, 'n_clicks'),
-         Input({'type': 'trl-filter', 'value': dash.ALL}, 'n_clicks'),
-         Input({'type': 'supply-chain-filter', 'value': dash.ALL}, 'n_clicks'),
-         Input("naics-clear-filters", "n_clicks")],
-        [State({'type': 'function-filter', 'value': dash.ALL}, 'id'),
-         State({'type': 'trl-filter', 'value': dash.ALL}, 'id'),
-         State({'type': 'supply-chain-filter', 'value': dash.ALL}, 'id'),
-         State("filter-mode-and", "active")],
-        prevent_initial_call=True
-    )
-    def update_filters(func_clicks, trl_clicks, supply_clicks, clear_clicks,
-                      func_ids, trl_ids, supply_ids, and_mode):
-        ctx = dash.callback_context
-        if not ctx.triggered:
-            raise PreventUpdate
-
-        # Initialize click counts
-        func_clicks = [0 if n is None else n for n in (func_clicks or [])]
-        trl_clicks = [0 if n is None else n for n in (trl_clicks or [])]
-        supply_clicks = [0 if n is None else n for n in (supply_clicks or [])]
-
-        # Handle clear filters
-        if ctx.triggered[0]['prop_id'] == 'naics-clear-filters.n_clicks':
-            return (
-                generate_naics_tree(naics_data),
-                "No active filters",
-                [0] * len(func_ids),
-                [0] * len(trl_ids),
-                [0] * len(supply_ids)
-            )
-
-        # Build active filters
-        active_filters = {}
-        
-        # Process function filters
-        for clicks, id_obj in zip(func_clicks, func_ids):
-            if clicks and clicks % 2 == 1:  # Button is active
-                active_filters['Function'] = id_obj['value']
-        
-        # Process TRL filters
-        for clicks, id_obj in zip(trl_clicks, trl_ids):
-            if clicks and clicks % 2 == 1:  # Button is active
-                active_filters['TRL'] = f"TRL {id_obj['value']}"
-        
-        # Process supply chain filters
-        for clicks, id_obj in zip(supply_clicks, supply_ids):
-            if clicks and clicks % 2 == 1:  # Button is active
-                active_filters['Supply Chain Position'] = id_obj['value']
-
-        # If no filters are active, return unfiltered data
-        if not active_filters:
-            return (
-                generate_naics_tree(naics_data),
-                "No active filters",
-                func_clicks,
-                trl_clicks,
-                supply_clicks
-            )
-
-        # Apply filters
-        filtered_data = filter_naics_data(naics_data, active_filters, 
-                                        filter_mode="AND" if and_mode else "OR")
-
-        # Create filter badges
-        filter_badges = []
-        for key, value in active_filters.items():
-            if key == 'Function':
-                color = FUNCTION_COLORS.get(value, 'secondary')
-            elif key == 'TRL':
-                color = TRL_COLORS.get(value.replace('TRL ', ''), 'secondary')
-            else:  # Supply Chain Position
-                color = SUPPLY_CHAIN_COLORS.get(value, 'secondary')
-            
-            filter_badges.append(
-                dbc.Badge(
-                    f"{key}: {value}",
-                    color=color,
-                    className="me-1 mb-1"
-                )
-            )
-
-        return (
-            generate_naics_tree(filtered_data),
-            html.Div(filter_badges),
-            func_clicks,
-            trl_clicks,
-            supply_clicks
-        )

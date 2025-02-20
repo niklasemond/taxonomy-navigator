@@ -1,9 +1,39 @@
+Taxonomy Navigator
+├── app.py                 # Main application entry point with routing
+├── tax_tree.py           # Technology taxonomy viewer
+├── naics_tree.py         # NAICS taxonomy viewer
+├── requirements.txt      # Python package dependencies
+├── README.md            # Project documentation
+├── .gitignore           # Git ignore rules
+│
+├── Data Files
+│   ├── hierarchical_tax_with_descriptions.json  # Technology taxonomy data
+│   └── tax_5-0.json                            # NAICS taxonomy data
+│
+└── Features
+    ├── Technology Taxonomy View
+    │   ├── Interactive category tree
+    │   ├── Color-coded classification badges
+    │   │   ├── Core Foundational (CF)
+    │   │   ├── Enabling (E)
+    │   │   ├── Application (A)
+    │   │   └── End Use (EU)
+    │   ├── TRL level indicators
+    │   ├── Supply Chain Classification
+    │   ├── Filtering capabilities
+    │   └── Detailed information panel
+    │
+    └── NAICS Taxonomy View
+        ├── Three-level hierarchy
+        │   ├── Category
+        │   ├── Subcategory with NAICS codes
+        │   └── Sub-subcategory with NAICS codes
+        ├── Collapsible navigation
+        ├── NAICS code display
+        ├── Descriptions at each level
+        └── Potential applications listing
 
-taxonomy-navigator/
-├── README.md
-├── requirements.txt
-├── src/
-│   ├── __init__.py
-│   ├── tax_tree.py
-│   └── hierarchical_tax_with_descriptions.json
-```
+Application Flow
+├── Home Page ("/")
+├── Technology Taxonomy ("/tech")
+└── NAICS Taxonomy ("/naics")

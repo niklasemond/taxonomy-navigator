@@ -1,0 +1,138 @@
+.subcategory-item:hover {
+    background-color: #f8f9fa !important;
+    cursor: pointer;
+}
+
+.subcategory-item {
+    transition: background-color 0.2s;
+}
+
+.sub-subcategory-item {
+    margin-left: 1rem;
+    border-left: 2px solid #dee2e6;
+    transition: background-color 0.2s;
+}
+
+.sub-subcategory-item:hover {
+    background-color: #f8f9fa !important;
+    cursor: pointer;
+}
+
+.card-header button {
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1.25rem;
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.card-header button:hover {
+    background-color: #f8f9fa;
+}
+
+.card-header button:after {
+    content: "\2212";
+    float: right;
+    font-weight: bold;
+}
+
+.card-header button.collapsed:after {
+    content: "\002B";
+}
+
+.card {
+    border: none;
+    border-radius: 0;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.subcategory-card {
+    border: none !important;
+    margin-left: 1rem;
+}
+
+.subcategory-card .card-header {
+    background-color: transparent;
+    border-bottom: none;
+    padding: 0.5rem;
+}
+
+.subcategory-card .card-header button {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    white-space: normal;
+}
+
+.subcategory-card .card-header button:after {
+    content: none;
+}
+
+.subcategory-card .card-header button.collapsed:after {
+    content: none;
+}
+
+.subcategory-card .card-header {
+    padding: 0;
+}
+
+.subcategory-card .card-header button > div {
+    margin-right: 1.5rem;
+}
+
+.subcategory-card .card-header button > div > div {
+    margin-bottom: 0.25rem;
+}
+
+.subcategory-card .card-header button > div > div:last-child {
+    margin-bottom: 0;
+}
+
+.subcategory-card .card-body {
+    padding-top: 0;
+}
+
+.collapse-button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.collapse-button:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.collapse-button.collapsed i {
+    transform: rotate(-90deg);
+}
+
+.collapse-button i {
+    transition: transform 0.3s ease;
+}
+
+.subcategory-content {
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.subcategory-content:hover {
+    background-color: #f8f9fa;
+} 
