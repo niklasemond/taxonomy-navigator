@@ -244,9 +244,13 @@ def not_found(e):
 if __name__ == '__main__':
     try:
         # Get port from environment variable (for Render)
-        port = int(os.environ.get("PORT", 8080))
+        port = int(os.environ.get("PORT", 10000))  # Changed default to 10000
         logger.info(f"Starting server on port {port}")
-        app.run_server(debug=False, host='0.0.0.0', port=port)
+        app.run_server(
+            debug=False,
+            host='0.0.0.0',
+            port=port
+        )
     except Exception as e:
         logger.error(f"Error starting server: {str(e)}")
-        raise 
+        raise
