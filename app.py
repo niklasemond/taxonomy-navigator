@@ -3,6 +3,7 @@ from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 from tax_tree import layout as tax_layout, register_callbacks as register_tax_callbacks
 from naics_tree import naics_layout, register_callbacks as register_naics_callbacks
+import os
 
 # Initialize the main app with callback suppression
 app = dash.Dash(
@@ -51,5 +52,9 @@ def display_page(pathname):
 register_tax_callbacks(app)
 register_naics_callbacks(app)
 
+server = app.server  # Needed for production deployment
+
 if __name__ == '__main__':
-    app.run_server(debug=True) 
+    # Use environment variable for port if available (needed for Render)
+    port = int(os.environ.get("PORT", 8080))
+    app.run_server(debug=False, host='0.0.0.0', port=port) 
