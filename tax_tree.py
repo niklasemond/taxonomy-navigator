@@ -5,13 +5,6 @@ import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 import pandas as pd
 
-# Load JSON taxonomy data
-with open("hierarchical_tax_with_descriptions.json", 'r') as f:
-    taxonomy_data = json.load(f)
-
-# Initialize Dash app without authentication
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
 # Color mappings for classifications
 CLASSIFICATION_COLORS = {
     'CF': 'primary',   # Core Foundational - Blue
@@ -26,6 +19,15 @@ TRL_COLORS = {
     'TRL 4-6': 'warning',    # Mid stage - Yellow
     'TRL 7-8': 'info',       # Late stage - Light Blue
     'TRL 9': 'success'       # Deployed - Green
+}
+
+# Add Supply Chain Classification colors
+SUPPLY_CHAIN_COLORS = {
+    'RMC': 'primary',   # Raw Materials & Components - Blue
+    'MF': 'success',    # Manufacturing Facilities - Green
+    'CET': 'warning',   # Computing, Electronics & Telecommunications - Yellow
+    'ASI': 'info',      # Applications, Systems & Integration - Light Blue
+    'EUP': 'danger'     # End User Products - Red
 }
 
 # Add these constants near the top of the file, after the color mappings
@@ -66,6 +68,15 @@ TRL_DESCRIPTIONS = {
     This represents fully mature technology that has been proven through successful operations in its intended environment."""
 }
 
+# Add Supply Chain Classification descriptions
+SUPPLY_CHAIN_DESCRIPTIONS = {
+    'RMC': "Raw Materials & Components: Basic materials and components manufacturing",
+    'MF': "Manufacturing Facilities: Production and assembly facilities",
+    'CET': "Computing, Electronics & Telecommunications: Digital and electronic systems",
+    'ASI': "Applications, Systems & Integration: System integration and applications",
+    'EUP': "End User Products: Final products for end users"
+}
+
 def generate_tree(taxonomy):
     """Generate the navigation tree from taxonomy data"""
     tree_elements = []
@@ -77,6 +88,7 @@ def generate_tree(taxonomy):
             # Create badges for classification and TRL
             classification = subdetails['Classification']
             trl = subdetails['TRL-Based Classification']
+            supply_chain = subdetails['Supply Chain Classification']
             
             subcategory_items.append(
                 dbc.ListGroupItem([
@@ -90,6 +102,11 @@ def generate_tree(taxonomy):
                         dbc.Badge(
                             trl,
                             color=TRL_COLORS.get(trl, 'secondary'),
+                            className="me-1"
+                        ),
+                        dbc.Badge(
+                            supply_chain,
+                            color=SUPPLY_CHAIN_COLORS.get(supply_chain, 'secondary'),
                             className="me-1"
                         )
                     ], style={'display': 'flex', 'alignItems': 'center'})
@@ -146,23 +163,50 @@ def filter_subcategories(taxonomy_data, active_filters=None):
     
     return filtered_data
 
+# Define the process_taxonomy_data function BEFORE loading the data
+def process_taxonomy_data(data):
+    """Convert flat list structure into hierarchical dictionary"""
+    organized_data = {}
+    
+    print(f"Processing {len(data)} items")
+    
+    for item in data:
+        category = item['Category']
+        if not category:
+            continue
+            
+        if category not in organized_data:
+            organized_data[category] = {
+                'Subcategories': {}
+            }
+        
+        subcategory = item['Subcategory']
+        if subcategory:
+            organized_data[category]['Subcategories'][subcategory] = {
+                'Classification': 'CF',
+                'Supply Chain Classification': 'RMC',
+                'TRL-Based Classification': 'TRL 1-3',
+                'Description': item['NAICS Description'],
+                'NAICS Code': item['NAICS Code'],
+                'Potential Applications': item['Potential Applications']
+            }
+    
+    return organized_data
+
+# THEN load and process the data
+with open('hierarchical_tax_with_descriptions.json', 'r') as file:
+    raw_data = json.load(file)
+    taxonomy_data = raw_data  # The data is already in the correct format
+
+# Initialize Dash app without authentication
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
 # App Layout
-app.layout = dbc.Container([
-    html.H1("Taxonomy Navigator", className="my-4"),
-    # Enhanced legend with clickable badges
+layout = dbc.Container([
+    html.H1("Technology Taxonomy Navigator", className="my-4"),
     dbc.Card([
         dbc.CardBody([
-            html.Div([
-                html.H5("Legend (Click to Filter)", className="card-title d-inline-block me-2"),
-                dbc.Button(
-                    "ⓘ",
-                    id="open-modal",
-                    color="link",
-                    size="sm",
-                    className="p-0 align-baseline",
-                    style={"text-decoration": "none"}
-                )
-            ], className="d-flex align-items-center"),
+            html.H5("Legend (Click to Filter)", className="card-title"),
             dbc.Row([
                 dbc.Col([
                     html.H6("Classification Types:", className="mb-2"),
@@ -211,28 +255,6 @@ app.layout = dbc.Container([
             ], className="text-center")
         ])
     ], className="mb-4"),
-    dbc.Modal([
-        dbc.ModalHeader("Classification & TRL Level Descriptions"),
-        dbc.ModalBody([
-            html.H5("Classification Types", className="mb-3"),
-            *[html.Div([
-                html.H6(f"{key}", className="mb-2"),
-                html.P(desc, className="mb-3")
-            ]) for key, desc in CLASSIFICATION_DESCRIPTIONS.items()],
-            
-            html.Hr(),
-            
-            html.H5("Technology Readiness Levels (TRL)", className="mt-4 mb-3"),
-            *[html.Div([
-                html.H6(level, className="mb-2"),
-                html.Pre(desc, className="mb-3", 
-                        style={"white-space": "pre-wrap", "font-family": "inherit"})
-            ]) for level, desc in TRL_DESCRIPTIONS.items()]
-        ]),
-        dbc.ModalFooter(
-            dbc.Button("Close", id="close-modal", className="ms-auto")
-        )
-    ], id="info-modal", size="lg", scrollable=True),
     dbc.Row([
         # Left column - Navigation Tree
         dbc.Col([
@@ -254,95 +276,47 @@ app.layout = dbc.Container([
     ])
 ], fluid=True)
 
-# Callback for category collapse
-@app.callback(
-    Output({'type': 'category-collapse', 'category': dash.MATCH}, 'is_open'),
-    Input({'type': 'category-button', 'category': dash.MATCH}, 'n_clicks'),
-    State({'type': 'category-collapse', 'category': dash.MATCH}, 'is_open'),
-    prevent_initial_call=True
-)
-def toggle_collapse(n_clicks, is_open):
-    if n_clicks:
-        return not is_open
-    return is_open
+def register_callbacks(app):
+    @app.callback(
+        Output({'type': 'category-collapse', 'category': dash.MATCH}, 'is_open'),
+        Input({'type': 'category-button', 'category': dash.MATCH}, 'n_clicks'),
+        State({'type': 'category-collapse', 'category': dash.MATCH}, 'is_open'),
+        prevent_initial_call=True
+    )
+    def toggle_category(n_clicks, is_open):
+        if n_clicks:
+            return not is_open
+        return is_open
 
-# Callback for subcategory details
-@app.callback(
-    Output('details-panel', 'children'),
-    Input({'type': 'subcategory-item', 'category': dash.ALL, 'subcategory': dash.ALL}, 'n_clicks'),
-    prevent_initial_call=True
-)
-def update_details(n_clicks):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return "Select a subcategory to view details"
-    
-    # Get the triggered component's ID
-    triggered_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
-    category = triggered_id['category']
-    subcategory = triggered_id['subcategory']
-    
-    # Get details from taxonomy data
-    details = taxonomy_data[category]['Subcategories'][subcategory]
-    
-    # Return formatted details
-    return html.Div([
-        html.H3(subcategory, className="mb-3"),
-        html.Div([
-            html.Strong("Classification: "),
-            html.Span(details['Classification'])
-        ], className="mb-2"),
-        html.Div([
-            html.Strong("Supply Chain Classification: "),
-            html.Span(details['Supply Chain Classification'])
-        ], className="mb-2"),
-        html.Div([
-            html.Strong("TRL-Based Classification: "),
-            html.Span(details['TRL-Based Classification'])
-        ], className="mb-2"),
-        html.Div([
-            html.Strong("Description: "),
-            html.Span(details['Description'])
-        ], className="mt-3")
-    ])
-
-# Add callback for filter badges with state to maintain multiple filters
-@app.callback(
-    [Output("taxonomy-tree", "children"),
-     Output("active-filters-display", "children"),
-     Output({'type': 'filter-badge', 'filter_type': dash.ALL, 'value': dash.ALL}, 'n_clicks')],  # Reset clicks
-    [Input({'type': 'filter-badge', 'filter_type': dash.ALL, 'value': dash.ALL}, 'n_clicks'),
-     Input("clear-filters", "n_clicks")],
-    [State({'type': 'filter-badge', 'filter_type': dash.ALL, 'value': dash.ALL}, 'id')],
-    prevent_initial_call=True
-)
-def update_tree(badge_clicks, clear_clicks, badge_ids):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
+    @app.callback(
+        [Output("taxonomy-tree", "children"),
+         Output("active-filters-display", "children")],
+        [Input({'type': 'filter-badge', 'filter_type': dash.ALL, 'value': dash.ALL}, 'n_clicks'),
+         Input("clear-filters", "n_clicks")],
+        [State({'type': 'filter-badge', 'filter_type': dash.ALL, 'value': dash.ALL}, 'id')],
+        prevent_initial_call=True
+    )
+    def update_filters(badge_clicks, clear_clicks, badge_ids):
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+            
+        trigger_id = ctx.triggered[0]['prop_id']
         
-    trigger_id = ctx.triggered[0]['prop_id']
-    
-    # Clear all filters if the clear button was clicked
-    if trigger_id == 'clear-filters.n_clicks':
-        # Return empty tree and reset all clicks to None
-        return generate_tree(taxonomy_data), "No active filters", [None] * len(badge_clicks)
-    
-    # Initialize active filters
-    active_filters = {}
-    
-    # Find which badges have been clicked
-    active_badges = [
-        badge_id for click, badge_id in zip(badge_clicks, badge_ids)
-        if click is not None and click % 2 == 1  # Only odd number of clicks means filter is active
-    ]
-    
-    # Update active filters
-    for badge_id in active_badges:
-        active_filters[badge_id['filter_type']] = badge_id['value']
-    
-    # Create active filters display
-    if active_filters:
+        if trigger_id == 'clear-filters.n_clicks':
+            return generate_tree(taxonomy_data), "No active filters"
+        
+        active_filters = {}
+        for i, (clicks, badge_id) in enumerate(zip(badge_clicks, badge_ids)):
+            if clicks and clicks % 2 == 1:  # Toggle on odd number of clicks
+                active_filters[badge_id['filter_type']] = badge_id['value']
+        
+        if not active_filters:
+            return generate_tree(taxonomy_data), "No active filters"
+        
+        filtered_data = filter_subcategories(taxonomy_data, active_filters)
+        
+        # Create active filters display
         filter_badges = [
             dbc.Badge(
                 f"{filter_type}: {value}",
@@ -351,27 +325,39 @@ def update_tree(badge_clicks, clear_clicks, badge_ids):
             )
             for filter_type, value in active_filters.items()
         ]
-        active_filters_display = html.Div(filter_badges)
-    else:
-        active_filters_display = "No active filters"
-    
-    # Filter the data and regenerate the tree
-    filtered_data = filter_subcategories(taxonomy_data, active_filters)
-    return generate_tree(filtered_data), active_filters_display, badge_clicks
+        
+        return generate_tree(filtered_data), html.Div(filter_badges)
 
-# Add this callback at the end of the file
-@app.callback(
-    Output("info-modal", "is_open"),
-    [Input("open-modal", "n_clicks"), Input("close-modal", "n_clicks")],
-    [State("info-modal", "is_open")],
-    prevent_initial_call=True
-)
-def toggle_modal(n1, n2, is_open):
-    if n1 or n2:
-        return not is_open
-    return is_open
-
-if __name__ == '__main__':
-    app.run_server(
-        debug=True      # Enable debug mode for development
+    @app.callback(
+        Output('details-panel', 'children'),
+        Input({'type': 'subcategory-item', 'category': dash.ALL, 'subcategory': dash.ALL}, 'n_clicks'),
+        prevent_initial_call=True
     )
+    def display_details(n_clicks):
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return "Select a subcategory to view details"
+        
+        button_id = json.loads(ctx.triggered[0]['prop_id'].split('.')[0])
+        category = button_id['category']
+        subcategory = button_id['subcategory']
+        
+        details = taxonomy_data[category]['Subcategories'][subcategory]
+        
+        return html.Div([
+            html.H3(subcategory),
+            html.P(f"Classification: {details['Classification']}"),
+            html.P(f"Supply Chain Classification: {details['Supply Chain Classification']}"),
+            html.P(f"TRL Classification: {details['TRL-Based Classification']}"),
+            html.P(f"Description: {details['Description']}"),
+            html.P(f"NAICS Code: {details['NAICS Code']}"),
+            html.P(f"Potential Applications: {details['Potential Applications']}")
+        ])
+
+# Only run this if the file is run directly
+if __name__ == '__main__':
+    app.layout = layout
+    app.run_server(debug=True)
+
+# At the very end of tax_tree.py, add this line:
+__all__ = ['app', 'layout', 'register_callbacks']
