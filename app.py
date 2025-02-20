@@ -7,6 +7,8 @@ import os
 import sys
 import logging
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
+import secrets
+from secret_key import generate_secret_key
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +32,14 @@ try:
         suppress_callback_exceptions=True
     )
     server = app.server  # Flask server
+    
+    # Set up secret key with fallback
+    if os.environ.get('FLASK_SECRET_KEY'):
+        server.secret_key = os.environ.get('FLASK_SECRET_KEY')
+    else:
+        # Generate a new secret key if none exists
+        server.secret_key = generate_secret_key()
+        logger.warning("Using generated secret key - for production, set FLASK_SECRET_KEY environment variable")
     
     # Setup the LoginManager
     login_manager = LoginManager()
@@ -58,13 +68,15 @@ login_layout = dbc.Container([
                         type="text",
                         id="username",
                         placeholder="Username",
-                        className="mb-3"
+                        className="mb-3",
+                        n_submit=0  # Enable Enter key
                     ),
                     dbc.Input(
                         type="password",
                         id="password",
                         placeholder="Password",
-                        className="mb-3"
+                        className="mb-3",
+                        n_submit=0  # Enable Enter key
                     ),
                     dbc.Button(
                         "Login",
@@ -94,7 +106,8 @@ except Exception as e:
 # Callbacks for login system
 @app.callback(
     [Output('login-status', 'data'),
-     Output('login-error', 'children')],
+     Output('login-error', 'children'),
+     Output('url', 'pathname')],
     [Input('login-button', 'n_clicks')],
     [State('username', 'value'),
      State('password', 'value')],
@@ -103,13 +116,26 @@ except Exception as e:
 def login_callback(n_clicks, username, password):
     if not n_clicks:
         raise dash.exceptions.PreventUpdate
+    
+    logger.info(f"Login attempt for user: {username}")
+    
+    if not username or not password:
+        logger.warning("Login attempt with empty credentials")
+        return False, 'Please enter both username and password', '/login'
         
     if username in VALID_USERNAME_PASSWORD_PAIRS and VALID_USERNAME_PASSWORD_PAIRS[username] == password:
-        login_user(User(username))
-        return True, ''
-    return False, 'Invalid username or password'
+        try:
+            login_user(User(username))
+            logger.info(f"Successful login for user: {username}")
+            return True, '', '/'
+        except Exception as e:
+            logger.error(f"Error during login: {str(e)}")
+            return False, f'Login error: {str(e)}', '/login'
+    
+    logger.warning(f"Failed login attempt for user: {username}")
+    return False, 'Invalid username or password', '/login'
 
-# Update page routing to include authentication
+# Update page routing callback
 @app.callback(
     Output('page-layout', 'children'),
     [Input('url', 'pathname'),
@@ -117,11 +143,15 @@ def login_callback(n_clicks, username, password):
 )
 def display_page(pathname, logged_in):
     try:
+        logger.info(f"Page request - Path: {pathname}, Logged in: {logged_in}")
+        
         if not logged_in and pathname != '/login':
+            logger.info("Redirecting to login page")
             return login_layout
             
         if pathname == '/login':
             if logged_in:
+                logger.info("Already logged in, redirecting to home")
                 return dcc.Location(pathname='/', id='redirect-home')
             return login_layout
             
