@@ -9,6 +9,8 @@ import logging
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 import secrets
 from secret_key import generate_secret_key
+from auth import User, users, init_login_manager
+from werkzeug.security import check_password_hash
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -42,9 +44,7 @@ try:
         logger.warning("Using generated secret key - for production, set FLASK_SECRET_KEY environment variable")
     
     # Setup the LoginManager
-    login_manager = LoginManager()
-    login_manager.init_app(server)
-    login_manager.login_view = '/login'
+    login_manager = init_login_manager(server)
     
     @login_manager.user_loader
     def load_user(username):
@@ -59,186 +59,130 @@ except Exception as e:
 
 # Create login page layout
 login_layout = dbc.Container([
-    html.Div([
-        html.H1("Login", className="text-center mb-4"),
-        dbc.Card([
-            dbc.CardBody([
-                dbc.Form([
-                    dbc.Input(
-                        type="text",
-                        id="username-input",
-                        placeholder="Username",
-                        className="mb-3"
-                    ),
-                    dbc.Input(
-                        type="password",
-                        id="password-input",
-                        placeholder="Password",
-                        className="mb-3"
-                    ),
-                    dbc.Button(
-                        "Login",
-                        id="login-button",
-                        color="primary",
-                        className="w-100"
-                    ),
-                    html.Div(id="login-error-message", className="text-danger mt-3")
+    html.H1("Login", className="text-center my-4"),
+    dbc.Row([
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    dbc.Form([
+                        dbc.Input(
+                            id="username-input",
+                            type="text",
+                            placeholder="Username",
+                            className="mb-3"
+                        ),
+                        dbc.Input(
+                            id="password-input",
+                            type="password",
+                            placeholder="Password",
+                            className="mb-3"
+                        ),
+                        dbc.Button(
+                            "Login",
+                            id="login-button",
+                            color="primary",
+                            n_clicks=0,
+                            className="w-100"
+                        ),
+                        html.Div(id="login-error")
+                    ])
                 ])
             ])
-        ], className="shadow-sm")
-    ], style={'max-width': '400px', 'margin': '100px auto'})
+        ], width=6)
+    ], justify="center")
 ])
 
-# Add 404 page layout
-not_found_layout = dbc.Container([
-    html.H1("404 - Page Not Found", className="text-center my-4"),
-    html.P("The page you're looking for doesn't exist.", className="text-center"),
-    dbc.Button("Go Home", href="/", color="primary", className="d-block mx-auto mt-3")
+# Remove the static navbar definition and replace with a function
+def create_navbar():
+    return dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("Technology Taxonomy", href="/tech", active="exact")),
+            dbc.NavItem(dbc.NavLink("NAICS Taxonomy", href="/naics", active="exact")),
+            dbc.NavItem(
+                dbc.Button("Logout", id="logout-button", color="light", className="ms-2")
+            ) if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
+        ],
+        brand="Taxonomy Navigator",
+        brand_href="/",
+        color="primary",
+        dark=True,
+    )
+
+# Main app layout
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=True),
+    html.Div(id='navbar-container'),
+    html.Div(id='page-content')
 ])
 
-# Update app layout to handle initial state
-try:
-    app.layout = html.Div([
-        dcc.Location(id='url', refresh=True),
-        dcc.Store(id='login-status', storage_type='session', data=False),  # Initialize as False
-        html.Div(id='page-content', children=login_layout),  # Set initial content
-        html.Div(id='login-error-div'),
-        # Add loading component
-        dcc.Loading(
-            id="loading",
-            type="default",
-            children=html.Div(id="loading-output")
-        )
-    ])
-    logger.info("Layout created successfully")
-except Exception as e:
-    logger.error(f"Error creating layout: {str(e)}")
-    raise
-
-# Update the display_page callback to handle initial state
+# Callbacks
 @app.callback(
-    Output('page-content', 'children'),
-    [Input('url', 'pathname'),
-     Input('login-status', 'data')],
-    prevent_initial_call=False  # Allow initial call
+    [Output('url', 'pathname'),
+     Output('login-error', 'children')],
+    [Input('login-button', 'n_clicks')],
+    [State('username-input', 'value'),
+     State('password-input', 'value')],
+    prevent_initial_call=True
 )
-def display_page(pathname, logged_in):
-    try:
-        logger.info(f"Page request - Path: {pathname}, Logged in: {logged_in}")
-        
-        # Handle initial state
-        if pathname is None:
-            pathname = '/'
-            
-        if logged_in is None:
-            logged_in = False
-        
-        if not logged_in:
-            logger.info("User not logged in, showing login page")
-            return login_layout
-            
-        # Navigation bar for authenticated users
-        navbar = dbc.NavbarSimple(
-            children=[
-                dbc.NavItem(dbc.NavLink("Technology Taxonomy", href="/tech", active="exact")),
-                dbc.NavItem(dbc.NavLink("NAICS Taxonomy", href="/naics", active="exact")),
-                dbc.NavItem(dbc.Button("Logout", id="logout-button", color="light", className="ms-3")),
-            ],
-            brand="Taxonomy Navigator",
-            brand_href="/",
-            color="primary",
-            dark=True,
-        )
-        
-        # Content based on pathname
-        if pathname == '/tech':
-            content = tax_layout
-        elif pathname == '/naics':
-            content = naics_layout
-        else:
-            content = dbc.Container([
-                html.H1("Welcome to Taxonomy Navigator", className="text-center my-4"),
-                html.P("Select a taxonomy view from the navigation bar above.", className="text-center")
-            ])
-            
-        return html.Div([navbar, content])
-        
-    except Exception as e:
-        logger.error(f"Error in display_page: {str(e)}")
-        return dbc.Alert(
-            f"An error occurred: {str(e)}",
-            color="danger",
-            className="m-3"
-        )
+def login_callback(n_clicks, username, password):
+    print(f"Login attempt - clicks: {n_clicks}, username: {username}")
+    
+    if not n_clicks or not username or not password:
+        return dash.no_update, dash.no_update
+    
+    if username in users and check_password_hash(users[username], password):
+        print("Login successful")
+        login_user(User(username))
+        return '/tech', ''
+    
+    print("Login failed")
+    return dash.no_update, html.Div('Invalid username or password', style={'color': 'red'})
 
-# Logout callback
 @app.callback(
-    [Output('login-status', 'clear_data'),
-     Output('url', 'pathname')],
+    Output('url', 'pathname', allow_duplicate=True),
     Input('logout-button', 'n_clicks'),
     prevent_initial_call=True
 )
 def logout_callback(n_clicks):
     if n_clicks:
         logout_user()
-        return True, '/login'
-    raise dash.exceptions.PreventUpdate
+        return '/login'
+    return dash.no_update
 
-# Add error handling to login callback
+# Update the display_page callback to use the function
 @app.callback(
-    [Output('login-status', 'data'),
-     Output('login-error-message', 'children'),
-     Output('url', 'pathname'),
-     Output('loading-output', 'children')],  # Add loading output
-    [Input('login-button', 'n_clicks'),
-     Input('username-input', 'n_submit'),
-     Input('password-input', 'n_submit')],
-    [State('username-input', 'value'),
-     State('password-input', 'value')],
-    prevent_initial_call=True
+    [Output('navbar-container', 'children'),
+     Output('page-content', 'children')],
+    [Input('url', 'pathname')]
 )
-def login_callback(n_clicks, username_submit, password_submit, username, password):
-    try:
-        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-        if not any([n_clicks, username_submit, password_submit]):
-            raise dash.exceptions.PreventUpdate
-        
-        logger.info(f"Login attempt for user: {username}")
-        
-        if not username or not password:
-            logger.warning("Login attempt with empty credentials")
-            return False, 'Please enter both username and password', '/login', ''
-            
-        if username in VALID_USERNAME_PASSWORD_PAIRS and VALID_USERNAME_PASSWORD_PAIRS[username] == password:
-            try:
-                login_user(User(username))
-                logger.info(f"Successful login for user: {username}")
-                return True, '', '/', ''
-            except Exception as e:
-                logger.error(f"Error during login: {str(e)}")
-                return False, f'Login error: {str(e)}', '/login', ''
-        
-        logger.warning(f"Failed login attempt for user: {username}")
-        return False, 'Invalid username or password', '/login', ''
-        
-    except Exception as e:
-        logger.error(f"Error in login callback: {str(e)}")
-        return False, f'An error occurred: {str(e)}', '/login', ''
+def display_page(pathname):
+    if pathname == '/login' or not hasattr(current_user, 'is_authenticated') or not current_user.is_authenticated:
+        return None, login_layout
+    
+    if pathname == '/tech':
+        return create_navbar(), tax_layout
+    elif pathname == '/naics':
+        return create_navbar(), naics_layout
+    else:
+        return create_navbar(), dbc.Container([
+            html.H1("Welcome to Taxonomy Navigator", className="text-center my-4"),
+            html.P("Select a taxonomy view from the navigation bar above.", className="text-center")
+        ])
 
-try:
-    # Register callbacks
-    register_tax_callbacks(app)
-    register_naics_callbacks(app)
-    logger.info("Callbacks registered successfully")
-except Exception as e:
-    logger.error(f"Error registering callbacks: {str(e)}")
-    raise
+# Register callbacks
+register_tax_callbacks(app)
+register_naics_callbacks(app)
+logger.info("Callbacks registered successfully")
 
 # Update server error handling
 @server.errorhandler(404)
 def not_found(e):
     return html.Div([
-        not_found_layout
+        dbc.Container([
+            html.H1("404 - Page Not Found", className="text-center my-4"),
+            html.P("The page you're looking for doesn't exist.", className="text-center"),
+            dbc.Button("Go Home", href="/", color="primary", className="d-block mx-auto mt-3")
+        ])
     ])
 
 if __name__ == '__main__':
