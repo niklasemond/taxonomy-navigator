@@ -1,17 +1,15 @@
 # Taxonomy Navigator
 
-An interactive web application for exploring and filtering hierarchical taxonomy data. Built with Dash and Bootstrap.
+A web application for navigating and filtering technology and NAICS taxonomies.
 
 ## Features
-- Interactive navigation tree for exploring categories and subcategories
-- Detailed information display for each subcategory
-- Color-coded badges for Classifications and TRL levels
-- Detailed descriptions of Classifications and TRL levels
-- Multiple filtering options:
-  - Classification Types (CF, E, A, EU)
-  - TRL Levels (TRL 1-3 through TRL 9)
-- Active filters display
-- Clear filters functionality
+
+- Technology Taxonomy Browser
+- NAICS Code Browser
+- Multi-level filtering system
+- Login authentication
+- AND/OR filter combinations
+- Interactive tree view
 
 ## Installation
 
@@ -23,13 +21,8 @@ cd taxonomy-navigator
 
 2. Create and activate a virtual environment:
 ```bash
-# Windows
 python -m venv venv
-venv\Scripts\activate
-
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 3. Install dependencies:
@@ -39,35 +32,46 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Run the application:
+1. Start the application:
 ```bash
-python tax_tree.py
+python app.py
 ```
 
-2. Open your browser and navigate to:
+2. Open a web browser and navigate to:
 ```
-http://localhost:8050
+http://localhost:8080
 ```
 
-## Data Structure
+3. Login with default credentials:
+- Username: admin
+- Password: admin123
 
-The taxonomy data is stored in `hierarchical_tax_with_descriptions.json` with the following structure:
+## Development
 
-```json
-{
-    "Category": {
-        "Subcategories": {
-            "Subcategory": {
-                "Classification": "Type",
-                "Supply Chain Classification": "Type",
-                "TRL-Based Classification": "Level",
-                "Description": "Text"
-            }
-        },
-        "Description": "Category description"
-    }
-}
+- The application uses Dash and Flask for the web interface
+- Data is stored in JSON files
+- Authentication is handled by Flask-Login
+
+## Deployment
+
+The application is configured for deployment on platforms like Render:
+
+1. Set the PORT environment variable
+2. Use gunicorn for production:
+```bash
+gunicorn app:server
 ```
+
+## Security Notes
+
+For production deployment:
+- Change default credentials
+- Implement proper user database
+- Use password hashing
+- Enable HTTPS
+- Add rate limiting
+- Implement CSRF protection
 
 ## License
-MIT License 
+
+[Your chosen license] 
