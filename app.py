@@ -89,72 +89,52 @@ login_layout = dbc.Container([
     ], style={'max-width': '400px', 'margin': '100px auto'})
 ])
 
-# Update app layout to include login state
+# Add 404 page layout
+not_found_layout = dbc.Container([
+    html.H1("404 - Page Not Found", className="text-center my-4"),
+    html.P("The page you're looking for doesn't exist.", className="text-center"),
+    dbc.Button("Go Home", href="/", color="primary", className="d-block mx-auto mt-3")
+])
+
+# Update app layout to handle initial state
 try:
     app.layout = html.Div([
         dcc.Location(id='url', refresh=True),
-        dcc.Store(id='login-status', storage_type='session'),
-        html.Div(id='page-content'),
-        html.Div(id='login-error-div')
+        dcc.Store(id='login-status', storage_type='session', data=False),  # Initialize as False
+        html.Div(id='page-content', children=login_layout),  # Set initial content
+        html.Div(id='login-error-div'),
+        # Add loading component
+        dcc.Loading(
+            id="loading",
+            type="default",
+            children=html.Div(id="loading-output")
+        )
     ])
     logger.info("Layout created successfully")
 except Exception as e:
     logger.error(f"Error creating layout: {str(e)}")
     raise
 
-# Callbacks for login system
-@app.callback(
-    [Output('login-status', 'data'),
-     Output('login-error-message', 'children'),
-     Output('url', 'pathname')],
-    [Input('login-button', 'n_clicks'),
-     Input('username-input', 'n_submit'),
-     Input('password-input', 'n_submit')],
-    [State('username-input', 'value'),
-     State('password-input', 'value')],
-    prevent_initial_call=True
-)
-def login_callback(n_clicks, username_submit, password_submit, username, password):
-    triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-    if not any([n_clicks, username_submit, password_submit]):
-        raise dash.exceptions.PreventUpdate
-    
-    logger.info(f"Login attempt for user: {username}")
-    
-    if not username or not password:
-        logger.warning("Login attempt with empty credentials")
-        return False, 'Please enter both username and password', '/login'
-        
-    if username in VALID_USERNAME_PASSWORD_PAIRS and VALID_USERNAME_PASSWORD_PAIRS[username] == password:
-        try:
-            login_user(User(username))
-            logger.info(f"Successful login for user: {username}")
-            return True, '', '/'
-        except Exception as e:
-            logger.error(f"Error during login: {str(e)}")
-            return False, f'Login error: {str(e)}', '/login'
-    
-    logger.warning(f"Failed login attempt for user: {username}")
-    return False, 'Invalid username or password', '/login'
-
-# Update page routing callback
+# Update the display_page callback to handle initial state
 @app.callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname'),
-     Input('login-status', 'data')]
+     Input('login-status', 'data')],
+    prevent_initial_call=False  # Allow initial call
 )
 def display_page(pathname, logged_in):
     try:
         logger.info(f"Page request - Path: {pathname}, Logged in: {logged_in}")
         
-        if not logged_in and pathname != '/login':
-            logger.info("Redirecting to login page")
-            return login_layout
+        # Handle initial state
+        if pathname is None:
+            pathname = '/'
             
-        if pathname == '/login':
-            if logged_in:
-                logger.info("Already logged in, redirecting to home")
-                return dcc.Location(pathname='/', id='redirect-home')
+        if logged_in is None:
+            logged_in = False
+        
+        if not logged_in:
+            logger.info("User not logged in, showing login page")
             return login_layout
             
         # Navigation bar for authenticated users
@@ -185,7 +165,11 @@ def display_page(pathname, logged_in):
         
     except Exception as e:
         logger.error(f"Error in display_page: {str(e)}")
-        return html.Div(f"An error occurred: {str(e)}")
+        return dbc.Alert(
+            f"An error occurred: {str(e)}",
+            color="danger",
+            className="m-3"
+        )
 
 # Logout callback
 @app.callback(
@@ -200,6 +184,47 @@ def logout_callback(n_clicks):
         return True, '/login'
     raise dash.exceptions.PreventUpdate
 
+# Add error handling to login callback
+@app.callback(
+    [Output('login-status', 'data'),
+     Output('login-error-message', 'children'),
+     Output('url', 'pathname'),
+     Output('loading-output', 'children')],  # Add loading output
+    [Input('login-button', 'n_clicks'),
+     Input('username-input', 'n_submit'),
+     Input('password-input', 'n_submit')],
+    [State('username-input', 'value'),
+     State('password-input', 'value')],
+    prevent_initial_call=True
+)
+def login_callback(n_clicks, username_submit, password_submit, username, password):
+    try:
+        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+        if not any([n_clicks, username_submit, password_submit]):
+            raise dash.exceptions.PreventUpdate
+        
+        logger.info(f"Login attempt for user: {username}")
+        
+        if not username or not password:
+            logger.warning("Login attempt with empty credentials")
+            return False, 'Please enter both username and password', '/login', ''
+            
+        if username in VALID_USERNAME_PASSWORD_PAIRS and VALID_USERNAME_PASSWORD_PAIRS[username] == password:
+            try:
+                login_user(User(username))
+                logger.info(f"Successful login for user: {username}")
+                return True, '', '/', ''
+            except Exception as e:
+                logger.error(f"Error during login: {str(e)}")
+                return False, f'Login error: {str(e)}', '/login', ''
+        
+        logger.warning(f"Failed login attempt for user: {username}")
+        return False, 'Invalid username or password', '/login', ''
+        
+    except Exception as e:
+        logger.error(f"Error in login callback: {str(e)}")
+        return False, f'An error occurred: {str(e)}', '/login', ''
+
 try:
     # Register callbacks
     register_tax_callbacks(app)
@@ -208,6 +233,13 @@ try:
 except Exception as e:
     logger.error(f"Error registering callbacks: {str(e)}")
     raise
+
+# Update server error handling
+@server.errorhandler(404)
+def not_found(e):
+    return html.Div([
+        not_found_layout
+    ])
 
 if __name__ == '__main__':
     try:
