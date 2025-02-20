@@ -66,17 +66,15 @@ login_layout = dbc.Container([
                 dbc.Form([
                     dbc.Input(
                         type="text",
-                        id="username",
+                        id="username-input",
                         placeholder="Username",
-                        className="mb-3",
-                        n_submit=0  # Enable Enter key
+                        className="mb-3"
                     ),
                     dbc.Input(
                         type="password",
-                        id="password",
+                        id="password-input",
                         placeholder="Password",
-                        className="mb-3",
-                        n_submit=0  # Enable Enter key
+                        className="mb-3"
                     ),
                     dbc.Button(
                         "Login",
@@ -84,7 +82,7 @@ login_layout = dbc.Container([
                         color="primary",
                         className="w-100"
                     ),
-                    html.Div(id="login-error", className="text-danger mt-3")
+                    html.Div(id="login-error-message", className="text-danger mt-3")
                 ])
             ])
         ], className="shadow-sm")
@@ -94,9 +92,10 @@ login_layout = dbc.Container([
 # Update app layout to include login state
 try:
     app.layout = html.Div([
-        dcc.Location(id='url', refresh=False),
+        dcc.Location(id='url', refresh=True),
         dcc.Store(id='login-status', storage_type='session'),
-        html.Div(id='page-layout')
+        html.Div(id='page-content'),
+        html.Div(id='login-error-div')
     ])
     logger.info("Layout created successfully")
 except Exception as e:
@@ -106,15 +105,18 @@ except Exception as e:
 # Callbacks for login system
 @app.callback(
     [Output('login-status', 'data'),
-     Output('login-error', 'children'),
+     Output('login-error-message', 'children'),
      Output('url', 'pathname')],
-    [Input('login-button', 'n_clicks')],
-    [State('username', 'value'),
-     State('password', 'value')],
+    [Input('login-button', 'n_clicks'),
+     Input('username-input', 'n_submit'),
+     Input('password-input', 'n_submit')],
+    [State('username-input', 'value'),
+     State('password-input', 'value')],
     prevent_initial_call=True
 )
-def login_callback(n_clicks, username, password):
-    if not n_clicks:
+def login_callback(n_clicks, username_submit, password_submit, username, password):
+    triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+    if not any([n_clicks, username_submit, password_submit]):
         raise dash.exceptions.PreventUpdate
     
     logger.info(f"Login attempt for user: {username}")
@@ -137,7 +139,7 @@ def login_callback(n_clicks, username, password):
 
 # Update page routing callback
 @app.callback(
-    Output('page-layout', 'children'),
+    Output('page-content', 'children'),
     [Input('url', 'pathname'),
      Input('login-status', 'data')]
 )
