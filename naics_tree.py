@@ -15,6 +15,7 @@ import logging
 import random  # Add at the top of the file
 import mysql.connector
 from mysql.connector import Error
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -446,6 +447,9 @@ def register_callbacks(app):
         
         try:
             conn = get_company_rankings_db_connection()
+            if conn is None:
+                return header, [html.Tr([html.Td("Company database not available", colSpan=4)])]
+            
             cursor = conn.cursor(dictionary=True)
             
             # Updated query for the new table structure
@@ -508,15 +512,16 @@ def get_company_rankings_db_connection():
     """Create a connection to the top_global_firms database"""
     try:
         connection = mysql.connector.connect(
-            host="localhost",
-            user="root",  # Update with your MySQL username
-            password="",  # Update with your MySQL password
-            database="top_global_firms"
+            host=os.getenv('MYSQL_HOST', 'localhost'),
+            user=os.getenv('MYSQL_USER', 'root'),
+            password=os.getenv('MYSQL_PASSWORD', ''),
+            database=os.getenv('MYSQL_DATABASE', 'top_global_firms')
         )
         return connection
     except Error as e:
         logger.error(f"Error connecting to MySQL Database: {e}")
-        raise
+        # Fallback to empty data if database is not available
+        return None
 
 def get_companies_for_naics(naics_code, sort_by="revenue"):
     """Get companies from MySQL database matching a NAICS code"""
