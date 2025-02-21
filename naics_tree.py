@@ -12,6 +12,7 @@ from database import (
     get_db_connection
 )
 import logging
+import random  # Add at the top of the file
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,6 +43,88 @@ SUPPLY_CHAIN_COLORS = {
     'CET': 'warning',
     'ASI': 'info',
     'EUP': 'danger'
+}
+
+# Update the COMPANY_RANKINGS dictionary with all 10 companies
+COMPANY_RANKINGS = {
+    "Apple Inc.": {
+        "country": "USA",
+        "revenue": 394.3,
+        "market_cap": 2850.0,
+        "yoy_growth": 7.8,
+        "proprietary_rank": 95
+    },
+    "Samsung Electronics": {
+        "country": "South Korea",
+        "revenue": 302.2,
+        "market_cap": 1450.0,
+        "yoy_growth": 12.3,
+        "proprietary_rank": 88
+    },
+    "TSMC": {
+        "country": "Taiwan",
+        "revenue": 273.5,
+        "market_cap": 1680.0,
+        "yoy_growth": 18.5,
+        "proprietary_rank": 92
+    },
+    "Nvidia": {
+        "country": "USA",
+        "revenue": 226.9,
+        "market_cap": 1920.0,
+        "yoy_growth": 32.7,
+        "proprietary_rank": 89
+    },
+    "Intel Corporation": {
+        "country": "USA",
+        "revenue": 209.2,
+        "market_cap": 890.0,
+        "yoy_growth": -2.3,
+        "proprietary_rank": 82
+    },
+    "Broadcom Inc.": {
+        "country": "USA",
+        "revenue": 184.8,
+        "market_cap": 780.0,
+        "yoy_growth": 15.6,
+        "proprietary_rank": 85
+    },
+    "Qualcomm": {
+        "country": "USA",
+        "revenue": 167.7,
+        "market_cap": 650.0,
+        "yoy_growth": 8.9,
+        "proprietary_rank": 83
+    },
+    "AMD": {
+        "country": "USA",
+        "revenue": 152.4,
+        "market_cap": 720.0,
+        "yoy_growth": 22.4,
+        "proprietary_rank": 87
+    },
+    "MediaTek": {
+        "country": "Taiwan",
+        "revenue": 128.3,
+        "market_cap": 420.0,
+        "yoy_growth": 16.8,
+        "proprietary_rank": 81
+    },
+    "SK Hynix": {
+        "country": "South Korea",
+        "revenue": 110.6,
+        "market_cap": 380.0,
+        "yoy_growth": 9.4,
+        "proprietary_rank": 80
+    }
+}
+
+# Add mapping for criteria display formats
+CRITERIA_FORMATS = {
+    "revenue": {"prefix": "$", "suffix": "B", "precision": 1},
+    "market_cap": {"prefix": "$", "suffix": "B", "precision": 1},
+    "yoy_growth": {"prefix": "", "suffix": "%", "precision": 1},
+    "proprietary_rank": {"prefix": "", "suffix": "", "precision": 0}
 }
 
 def process_naics_data(data):
@@ -370,26 +453,82 @@ def register_callbacks(app):
                 code = item['sub_naics_code'] if clicked_type == "sub-subcategory-item" else item['naics_code']
                 description = item['sub_naics_description'] if clicked_type == "sub-subcategory-item" else item['naics_description']
                 
-                return dbc.Card([
-                    dbc.CardHeader(html.H4(title)),
-                    dbc.CardBody([
-                        html.H5("NAICS Information"),
-                        html.P([
-                            html.Strong("Code: "),
-                            html.Span(code),
+                return html.Div([
+                    # Existing details card
+                    dbc.Card([
+                        dbc.CardHeader(html.H4(title)),
+                        dbc.CardBody([
+                            html.H5("NAICS Information"),
+                            html.P([
+                                html.Strong("Code: "),
+                                html.Span(code),
+                            ]),
+                            html.P([
+                                html.Strong("Description: "),
+                                html.Span(description),
+                            ]),
+                            html.H5("Classification", className="mt-3"),
+                            html.Div([
+                                create_badge("Function", item['function']),
+                                create_badge("Supply Chain", item['supply_chain_position']),
+                                create_badge("TRL", item['trl']),
+                            ]),
+                            html.H5("Potential Applications", className="mt-3"),
+                            html.P(item['potential_applications']),
+                        ])
+                    ], className="mb-3"),
+                    
+                    # New simple Top Corporations card
+                    dbc.Card([
+                        dbc.CardHeader([
+                            html.H4("Top Corporations", className="d-inline"),
+                            dbc.ButtonGroup([
+                                dbc.Button(
+                                    "Revenue",
+                                    id={"type": "ranking-criteria", "value": "revenue"},
+                                    color="primary",
+                                    size="sm",
+                                    className="me-1",
+                                    active=True
+                                ),
+                                dbc.Button(
+                                    "Market Cap",
+                                    id={"type": "ranking-criteria", "value": "market_cap"},
+                                    color="primary",
+                                    size="sm",
+                                    className="me-1",
+                                    outline=True
+                                ),
+                                dbc.Button(
+                                    "YoY Growth",
+                                    id={"type": "ranking-criteria", "value": "yoy_growth"},
+                                    color="primary",
+                                    size="sm",
+                                    className="me-1",
+                                    outline=True
+                                ),
+                                dbc.Button(
+                                    "Proprietary Rank",
+                                    id={"type": "ranking-criteria", "value": "proprietary_rank"},
+                                    color="primary",
+                                    size="sm",
+                                    outline=True
+                                )
+                            ], className="float-end")
                         ]),
-                        html.P([
-                            html.Strong("Description: "),
-                            html.Span(description),
-                        ]),
-                        html.H5("Classification", className="mt-3"),
-                        html.Div([
-                            create_badge("Function", item['function']),
-                            create_badge("Supply Chain", item['supply_chain_position']),
-                            create_badge("TRL", item['trl']),
-                        ]),
-                        html.H5("Potential Applications", className="mt-3"),
-                        html.P(item['potential_applications']),
+                        dbc.CardBody([
+                            dbc.Table([
+                                html.Thead([
+                                    html.Tr([
+                                        html.Th("Rank"),
+                                        html.Th("Company"),
+                                        html.Th("Country"),
+                                        html.Th("Revenue ($B)", id="value-column")  # Dynamic header
+                                    ])
+                                ]),
+                                html.Tbody(id="rankings-table")  # Dynamic content
+                            ], bordered=True, hover=True, size="sm")
+                        ])
                     ])
                 ])
                 
@@ -431,6 +570,57 @@ def register_callbacks(app):
         if n_clicks:
             return not is_open
         return is_open
+
+    @app.callback(
+        [Output("value-column", "children"),
+         Output("rankings-table", "children")],
+        [Input({"type": "ranking-criteria", "value": ALL}, "n_clicks")],
+        prevent_initial_call=False
+    )
+    def update_rankings(n_clicks):
+        # Default to revenue if no clicks yet
+        if not dash.callback_context.triggered or not any(n_clicks):
+            return update_table("revenue")
+        
+        # Get the clicked button's criteria
+        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+        criteria = json.loads(triggered)['value']
+        
+        return update_table(criteria)
+
+    def update_table(criteria):
+        """Update table header and content based on selected criteria"""
+        # Format the header based on criteria
+        fmt = CRITERIA_FORMATS[criteria]
+        header = {
+            "revenue": "Revenue ($B)",
+            "market_cap": "Market Cap ($B)",
+            "yoy_growth": "YoY Growth (%)",
+            "proprietary_rank": "Proprietary Rank"
+        }[criteria]
+        
+        # Sort companies by selected criteria
+        sorted_companies = sorted(
+            COMPANY_RANKINGS.items(),
+            key=lambda x: x[1][criteria],
+            reverse=True
+        )[:10]  # Top 10 only
+        
+        # Generate table rows
+        rows = []
+        for idx, (company, data) in enumerate(sorted_companies, 1):
+            value = data[criteria]
+            formatted_value = f"{fmt['prefix']}{value:.{fmt['precision']}f}{fmt['suffix']}"
+            
+            row = html.Tr([
+                html.Td(str(idx)),
+                html.Td(company),
+                html.Td(data["country"]),
+                html.Td(formatted_value)
+            ])
+            rows.append(row)
+        
+        return header, rows
 
 # Create the layout - fix indentation by moving it to module level
 naics_layout = dbc.Container([
