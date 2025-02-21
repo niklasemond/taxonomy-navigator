@@ -33,3 +33,4 @@ Werkzeug==3.0.6
 zipp==3.21.0
 gunicorn==21.2.0
 Flask-Login==0.6.3
+mysql-connector-python==8.0.26
