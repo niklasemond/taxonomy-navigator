@@ -33,7 +33,7 @@ try:
     init_database()
     
     # Import data from JSON files
-    import_json_to_db('/Users/niklasemond/grayspace_tech/tax_tree/taxonomy-navigator/taxonomy.json')
+    import_json_to_db('taxonomy.json')
     import_companies_to_db('top_global_firms.json')
     logger.info("Database initialized and all data imported successfully")
     
