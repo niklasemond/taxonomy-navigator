@@ -36,10 +36,10 @@ def get_all_categories():
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT DISTINCT category 
+            SELECT DISTINCT Category 
             FROM taxonomy 
-            WHERE category != ''
-            ORDER BY category
+            WHERE Category IS NOT NULL
+            ORDER BY Category
         """)
         return cursor.fetchall()
 
@@ -50,9 +50,9 @@ def get_subcategories(category):
         cursor.execute("""
             SELECT *
             FROM taxonomy 
-            WHERE category = ? AND subcategory != ''
-            GROUP BY subcategory
-            ORDER BY subcategory
+            WHERE Category = ? AND Subcategory IS NOT NULL
+            GROUP BY Subcategory
+            ORDER BY Subcategory
         """, (category,))
         return cursor.fetchall()
 
@@ -63,11 +63,11 @@ def get_sub_subcategories(category, subcategory):
         cursor.execute("""
             SELECT *
             FROM taxonomy 
-            WHERE category = ? 
-            AND subcategory = ?
-            AND sub_subcategory IS NOT NULL
-            AND sub_subcategory != ''
-            ORDER BY sub_subcategory
+            WHERE Category = ? 
+            AND Subcategory = ?
+            AND "Potential Sub-Subcategory" IS NOT NULL
+            AND "Potential Sub-Subcategory" != 'N/A'
+            ORDER BY "Potential Sub-Subcategory"
         """, (category, subcategory))
         return cursor.fetchall()
 
@@ -86,7 +86,7 @@ def filter_taxonomy(filters, filter_mode="AND"):
         where_clauses = []
         params = []
         for field, value in filters.items():
-            where_clauses.append(f"{field} = ?")
+            where_clauses.append(f'"{field}" = ?')
             params.append(value)
             
         # Combine clauses based on filter mode
@@ -94,12 +94,13 @@ def filter_taxonomy(filters, filter_mode="AND"):
         where_sql = where_sql.join(where_clauses)
         
         query = f"""
-            SELECT DISTINCT category, subcategory, naics_code, naics_description,
-                   sub_subcategory, sub_naics_code, sub_naics_description,
-                   function, supply_chain_position, trl, potential_applications
+            SELECT DISTINCT Category, Subcategory, "NAICS Code", "NAICS Description",
+                   "Potential Sub-Subcategory", "Sub-Subcategory NAICS Code",
+                   "Sub-Subcategory NAICS Description", "Potential Applications",
+                   "Function", "Supply Chain Position", "TRL"
             FROM taxonomy
             WHERE {where_sql}
-            ORDER BY category, subcategory, sub_subcategory
+            ORDER BY Category, Subcategory, "Potential Sub-Subcategory"
         """
         
         cursor.execute(query, params)
@@ -229,40 +230,38 @@ def import_companies_to_db(json_file_path):
         with open(json_file_path, 'r') as file:
             data = json.load(file)
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Clear existing data
-        cursor.execute('DELETE FROM top_global_firms')
-        
-        # Insert new data
-        for company in data:
-            cursor.execute('''
-                INSERT INTO top_global_firms (
-                    Company_Name, Country, Revenue, Market_Cap, YoY_Growth,
-                    Description, NAICS_Codes, Market_Share, Patents_Last_Year,
-                    R_and_D_Spending_Percentage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                company.get('Company_Name'),
-                company.get('Country'),
-                company.get('Revenue'),
-                company.get('Market_Cap'),
-                company.get('YoY_Growth'),
-                company.get('Description'),
-                company.get('NAICS_Codes'),
-                company.get('Market_Share'),
-                company.get('Patents_Last_Year'),
-                company.get('R&D_Spending_Percentage')
-            ))
-        
-        conn.commit()
-        logger.info(f"Successfully imported company data from {json_file_path}")
-    except (sqlite3.Error, json.JSONDecodeError, FileNotFoundError) as e:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Clear existing data
+            cursor.execute('DELETE FROM top_global_firms')
+            
+            # Insert new data
+            for company in data:
+                cursor.execute('''
+                    INSERT INTO top_global_firms (
+                        Company_Name, Country, Revenue, Market_Cap, YoY_Growth,
+                        Description, NAICS_Codes, Market_Share, Patents_Last_Year,
+                        R_and_D_Spending_Percentage
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    company.get('Company_Name'),
+                    company.get('Country'),
+                    company.get('Revenue'),
+                    company.get('Market_Cap'),
+                    company.get('YoY_Growth'),
+                    company.get('Description'),
+                    company.get('NAICS_Codes'),
+                    company.get('Market_Share'),
+                    company.get('Patents_Last_Year'),
+                    company.get('R&D_Spending_Percentage')
+                ))
+            
+            conn.commit()
+            logger.info(f"Successfully imported company data from {json_file_path}")
+    except Exception as e:
         logger.error(f"Error importing company data: {e}")
         raise
-    finally:
-        conn.close()
 
 def get_table_schema():
     """Print the current table schema"""
