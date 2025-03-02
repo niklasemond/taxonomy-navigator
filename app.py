@@ -11,7 +11,7 @@ import secrets
 from secret_key import generate_secret_key
 from auth import User, users, init_login_manager
 from werkzeug.security import check_password_hash
-from database import init_database
+from database import init_database, import_json_to_db, import_companies_to_db
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +31,11 @@ class User(UserMixin):
 try:
     # Initialize database before creating app
     init_database()
+    
+    # Import data from JSON files
+    import_json_to_db('data/taxonomy.json')
+    import_companies_to_db('top_global_firms.json')
+    logger.info("Database initialized and all data imported successfully")
     
     app = dash.Dash(
         __name__, 

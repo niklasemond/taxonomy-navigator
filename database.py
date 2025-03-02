@@ -1,21 +1,28 @@
 import sqlite3
 from contextlib import contextmanager
 import logging
+import os
+import json
 
 logger = logging.getLogger(__name__)
 
-DATABASE_PATH = 'taxonomy.db'
+# Use /tmp directory on Render for database storage
+DATABASE_PATH = os.environ.get('DATABASE_PATH', '/tmp/taxonomy.db')
 
 @contextmanager
 def get_db_connection():
     """Context manager for database connections"""
     conn = None
     try:
+        # Create a data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Connect to SQLite database (will create if not exists)
         conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        conn.row_factory = sqlite3.Row  # This enables column access by name
         yield conn
     except Exception as e:
-        logger.error(f"Database connection error: {e}")
+        logger.error(f"Database connection error: {str(e)}")
         raise
     finally:
         if conn:
@@ -109,62 +116,143 @@ def get_distinct_values(field):
 
 def init_database():
     """Initialize the database and create the taxonomy table"""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS taxonomy (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category TEXT NOT NULL,
-                subcategory TEXT NOT NULL,
-                naics_code TEXT,
-                naics_description TEXT,
-                sub_subcategory TEXT,
-                sub_naics_code TEXT,
-                sub_naics_description TEXT,
-                function TEXT,
-                supply_chain_position TEXT,
-                trl TEXT,
-                potential_applications TEXT
-            )
-        """)
-        conn.commit()
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Create taxonomy table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS taxonomy (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category TEXT,
+                    subcategory TEXT,
+                    naics_code TEXT,
+                    naics_description TEXT,
+                    sub_subcategory TEXT,
+                    sub_naics_code TEXT,
+                    sub_naics_description TEXT,
+                    function TEXT,
+                    supply_chain_position TEXT,
+                    trl TEXT,
+                    potential_applications TEXT
+                )
+            ''')
+            
+            # Create top_global_firms table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS top_global_firms (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Company_Name TEXT,
+                    Country TEXT,
+                    NAICS_Codes TEXT,
+                    revenue REAL,
+                    market_cap REAL,
+                    yoy_growth REAL,
+                    market_share REAL
+                )
+            ''')
+            
+            conn.commit()
+            logger.info("Database initialized successfully")
+            
+    except Exception as e:
+        logger.error(f"Error initializing database: {str(e)}")
+        raise
 
 def import_json_to_db(json_file_path):
     """Import data from JSON file into the database"""
-    import json
-    
-    with open(json_file_path, 'r') as f:
-        data = json.load(f)
-    
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
+    try:
+        # Check if file exists
+        if not os.path.exists(json_file_path):
+            # Try looking in the data directory
+            alt_path = os.path.join('data', os.path.basename(json_file_path))
+            if os.path.exists(alt_path):
+                json_file_path = alt_path
+            else:
+                raise FileNotFoundError(f"JSON file not found at {json_file_path} or {alt_path}")
         
-        # Clear existing data
-        cursor.execute("DELETE FROM taxonomy")
+        with open(json_file_path, 'r') as f:
+            data = json.load(f)
         
-        # Insert new data
-        for item in data:
-            cursor.execute("""
-                INSERT INTO taxonomy (
-                    category, subcategory, naics_code, naics_description,
-                    sub_subcategory, sub_naics_code, sub_naics_description,
-                    function, supply_chain_position, trl, potential_applications
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                item['Category'],
-                item['Subcategory'],
-                str(item['NAICS Code']),
-                item['NAICS Description'],
-                item['Potential Sub-Subcategory'] if item['Potential Sub-Subcategory'] != 'N/A' else None,
-                item['Sub-Subcategory NAICS Code'] if item['Sub-Subcategory NAICS Code'] != 'N/A' else None,
-                item['Sub-Subcategory NAICS Description'] if item['Sub-Subcategory NAICS Description'] != 'N/A' else None,
-                item.get('Function'),
-                item.get('Supply Chain Position'),
-                item.get('TRL'),
-                item.get('Potential Applications')
-            ))
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Clear existing data
+            cursor.execute("DELETE FROM taxonomy")
+            
+            # Insert new data
+            for item in data:
+                cursor.execute("""
+                    INSERT INTO taxonomy (
+                        category, subcategory, naics_code, naics_description,
+                        sub_subcategory, sub_naics_code, sub_naics_description,
+                        function, supply_chain_position, trl, potential_applications
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    item.get('Category', ''),
+                    item.get('Subcategory', ''),
+                    str(item.get('NAICS Code', '')),
+                    item.get('NAICS Description', ''),
+                    item.get('Potential Sub-Subcategory', 'N/A') if item.get('Potential Sub-Subcategory') != 'N/A' else None,
+                    item.get('Sub-Subcategory NAICS Code', 'N/A') if item.get('Sub-Subcategory NAICS Code') != 'N/A' else None,
+                    item.get('Sub-Subcategory NAICS Description', 'N/A') if item.get('Sub-Subcategory NAICS Description') != 'N/A' else None,
+                    item.get('Function'),
+                    item.get('Supply Chain Position'),
+                    item.get('TRL'),
+                    item.get('Potential Applications')
+                ))
+            
+            conn.commit()
+            logger.info(f"Successfully imported {len(data)} records from {json_file_path}")
+            
+    except Exception as e:
+        logger.error(f"Error importing JSON data: {str(e)}")
+        raise
+
+def import_companies_to_db(json_file_path):
+    """Import company data from JSON file into the database"""
+    try:
+        # Check if file exists
+        if not os.path.exists(json_file_path):
+            # Try looking in the data directory
+            alt_path = os.path.join('data', os.path.basename(json_file_path))
+            if os.path.exists(alt_path):
+                json_file_path = alt_path
+            else:
+                raise FileNotFoundError(f"JSON file not found at {json_file_path} or {alt_path}")
         
-        conn.commit()
+        with open(json_file_path, 'r') as f:
+            data = json.load(f)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Clear existing data
+            cursor.execute("DELETE FROM top_global_firms")
+            
+            # Insert new data
+            for item in data:
+                cursor.execute("""
+                    INSERT INTO top_global_firms (
+                        Company_Name, Country, NAICS_Codes,
+                        revenue, market_cap, yoy_growth, market_share
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    item.get('Company_Name', ''),
+                    item.get('Country', ''),
+                    item.get('NAICS_Codes', ''),
+                    item.get('revenue', 0.0),
+                    item.get('market_cap', 0.0),
+                    item.get('yoy_growth', 0.0),
+                    item.get('market_share', 0.0)
+                ))
+            
+            conn.commit()
+            logger.info(f"Successfully imported {len(data)} company records from {json_file_path}")
+            
+    except Exception as e:
+        logger.error(f"Error importing company data: {str(e)}")
+        raise
 
 def get_table_schema():
     """Print the current table schema"""

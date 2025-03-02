@@ -374,7 +374,7 @@ def register_callbacks(app):
                 code = item['sub_naics_code'] if clicked_type == "sub-subcategory-item" else item['naics_code']
                 logger.info(f"Found NAICS code in taxonomy: {code}")
                 
-                # Now get matching companies from the MySQL database
+                # Now get matching companies from the SQLite database
                 companies = get_companies_for_naics(code, "revenue")  # Default to revenue sorting
                 
                 return create_details_panel(item, companies), code
@@ -446,58 +446,45 @@ def register_callbacks(app):
         }[criteria]
         
         try:
-            conn = get_company_rankings_db_connection()
-            if conn is None:
-                return header, [html.Tr([html.Td("Company database not available", colSpan=4)])]
-            
-            cursor = conn.cursor(dictionary=True)
-            
-            # Updated query for the new table structure
-            query = """
-                SELECT Company_Name as company_name,
-                       Country as country,
-                       {} as value
-                FROM top_global_firms
-                WHERE NAICS_Codes LIKE %s
-                ORDER BY {} DESC
-                LIMIT 10
-            """.format(criteria, criteria)
-            
-            # Use wildcards to match NAICS code hierarchy
-            if naics_code:
-                naics_pattern = f"{naics_code[:3]}%"  # Match first 3 digits
-            else:
-                naics_pattern = "%"
-            
-            logger.info(f"Executing query with pattern: {naics_pattern}")
-            cursor.execute(query, (naics_pattern,))
-            companies = cursor.fetchall()
-            
-            # Generate table rows
-            rows = []
-            for idx, company in enumerate(companies, 1):
-                value = company['value']
-                if value is not None:  # Add null check
-                    formatted_value = format_value(value, criteria)
-                    
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                query = """
+                    SELECT *
+                    FROM taxonomy
+                    WHERE naics_code LIKE ?
+                    ORDER BY naics_code
+                    LIMIT 10
+                """
+                
+                # Use wildcards to match NAICS code hierarchy
+                if naics_code:
+                    naics_pattern = f"{naics_code[:3]}%"  # Match first 3 digits
+                else:
+                    naics_pattern = "%"
+                
+                logger.info(f"Executing query with pattern: {naics_pattern}")
+                cursor.execute(query, (naics_pattern,))
+                companies = cursor.fetchall()
+                
+                # Generate table rows
+                rows = []
+                for idx, company in enumerate(companies, 1):
                     row = html.Tr([
                         html.Td(str(idx)),
-                        html.Td(company['company_name']),
-                        html.Td(company['country']),
-                        html.Td(formatted_value)
+                        html.Td(company['naics_description']),
+                        html.Td(company['naics_code']),
+                        html.Td(company['category'])
                     ])
                     rows.append(row)
-            
-            cursor.close()
-            conn.close()
-            
-            if not rows:
-                return header, [html.Tr([html.Td("No companies found for this NAICS code", colSpan=4)])]
-            return header, rows
-            
-        except Error as e:
+                
+                if not rows:
+                    return header, [html.Tr([html.Td("No data found for this NAICS code", colSpan=4)])]
+                return header, rows
+                
+        except Exception as e:
             logger.error(f"Database error in update_table: {e}")
-            return header, [html.Tr([html.Td(f"Error loading company data: {str(e)}", colSpan=4)])]
+            return header, [html.Tr([html.Td(f"Error loading data: {str(e)}", colSpan=4)])]
 
     def format_value(value, criteria):
         """Format value based on criteria type"""
@@ -508,55 +495,33 @@ def register_callbacks(app):
         else:  # proprietary_rank
             return str(int(value))
 
-def get_company_rankings_db_connection():
-    """Create a connection to the top_global_firms database"""
-    try:
-        connection = mysql.connector.connect(
-            host=os.getenv('MYSQL_HOST', 'localhost'),
-            user=os.getenv('MYSQL_USER', 'root'),
-            password=os.getenv('MYSQL_PASSWORD', ''),
-            database=os.getenv('MYSQL_DATABASE', 'top_global_firms')
-        )
-        return connection
-    except Error as e:
-        logger.error(f"Error connecting to MySQL Database: {e}")
-        # Fallback to empty data if database is not available
-        return None
-
 def get_companies_for_naics(naics_code, sort_by="revenue"):
-    """Get companies from MySQL database matching a NAICS code"""
+    """Get companies from SQLite database matching a NAICS code"""
     try:
-        conn = get_company_rankings_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # Updated query to work with the top_global_firms table structure
-        query = """
-            SELECT Company_Name as company_name, 
-                   Country as country,
-                   Revenue as revenue,
-                   Market_Cap as market_cap,
-                   Market_Share as market_share,
-                   YoY_Growth as yoy_growth
-            FROM top_global_firms
-            WHERE NAICS_Codes LIKE %s
-            ORDER BY {} DESC
-            LIMIT 10
-        """.format(sort_by)
-        
-        # Try exact match first
-        cursor.execute(query, (naics_code,))
-        companies = cursor.fetchall()
-        
-        # If no results, try broader match
-        if not companies and len(naics_code) > 3:
-            cursor.execute(query, (naics_code[:3] + '%',))
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query using SQLite syntax
+            query = """
+                SELECT *
+                FROM taxonomy
+                WHERE naics_code LIKE ?
+                ORDER BY naics_code
+                LIMIT 10
+            """
+            
+            # Try exact match first
+            cursor.execute(query, (naics_code,))
             companies = cursor.fetchall()
-        
-        cursor.close()
-        conn.close()
-        return companies
-        
-    except Error as e:
+            
+            # If no results, try broader match
+            if not companies and len(naics_code) > 3:
+                cursor.execute(query, (naics_code[:3] + '%',))
+                companies = cursor.fetchall()
+            
+            return companies
+            
+    except Exception as e:
         logger.error(f"Error getting companies for NAICS {naics_code}: {e}")
         return []
 
@@ -645,6 +610,36 @@ def create_details_panel(item, companies):
             ])
         ])
     ])
+
+def get_naics_details(naics_code):
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            raise Exception("Could not establish database connection")
+            
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT code, title, description, examples, cross_references 
+            FROM naics_codes 
+            WHERE code = ?
+        """, (naics_code,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                'code': result['code'],
+                'title': result['title'],
+                'description': result['description'],
+                'examples': result['examples'],
+                'cross_references': result['cross_references']
+            }
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error getting NAICS details: {str(e)}")
+        return None
 
 # Create the layout - fix indentation by moving it to module level
 naics_layout = dbc.Container([
