@@ -27,16 +27,26 @@ class User(UserMixin):
     def __init__(self, username):
         self.id = username
 
+# Initialize database and import data at startup
+try:
+    # Initialize database first
+    init_database()
+    logger.info("Database initialized successfully")
+    
+    # Import taxonomy data
+    import_json_to_db('data/taxonomy.json')
+    logger.info("Taxonomy data imported successfully")
+    
+    # Import company data
+    import_companies_to_db('top_global_firms.json')
+    logger.info("Company data imported successfully")
+except Exception as e:
+    logger.error(f"Error during initialization: {e}")
+    # Continue execution even if import fails
+    pass
+
 # Initialize the main app
 try:
-    # Initialize database before creating app
-    init_database()
-    
-    # Import data from JSON files
-    import_json_to_db('taxonomy.json')
-    import_companies_to_db('top_global_firms.json')
-    logger.info("Database initialized and all data imported successfully")
-    
     app = dash.Dash(
         __name__, 
         external_stylesheets=[dbc.themes.BOOTSTRAP],
