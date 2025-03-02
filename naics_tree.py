@@ -9,13 +9,10 @@ from database import (
     get_sub_subcategories,
     filter_taxonomy,
     get_distinct_values,
-    get_db_connection
+    get_companies_for_naics
 )
 import logging
-import random  # Add at the top of the file
-import mysql.connector
-from mysql.connector import Error
-import os
+import random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -201,6 +198,33 @@ def create_badge(label, value):
         className="me-1"
     )
 
+def format_value(value, criteria):
+    """Format value based on criteria type"""
+    if value is None:
+        return "N/A"
+    
+    try:
+        if criteria in ["revenue", "market_cap"]:
+            value = float(value) / 1e9  # Convert to billions
+            return f"${value:,.1f}B"
+        elif criteria in ["yoy_growth", "market_share", "r&d_spending"]:
+            return f"{float(value):,.1f}%"
+        else:
+            return str(value)
+    except (ValueError, TypeError):
+        return "N/A"
+
+def get_ranking_header(criteria):
+    """Get the header text for the ranking table"""
+    headers = {
+        'revenue': 'Revenue ($B)',
+        'market_cap': 'Market Cap ($B)',
+        'yoy_growth': 'YoY Growth (%)',
+        'market_share': 'Market Share (%)',
+        'r&d_spending': 'R&D Spending (%)'
+    }
+    return headers.get(criteria, 'Revenue ($B)')
+
 def create_filter_section():
     """Create filter buttons from database values"""
     function_values = get_distinct_values('function')
@@ -212,6 +236,15 @@ def create_filter_section():
 
 def register_callbacks(app):
     """Register callbacks for the NAICS tree"""
+    @app.callback(
+        Output("rankings-card", "style"),
+        [Input("current-naics-code", "data")]
+    )
+    def toggle_rankings_card(naics_code):
+        if naics_code:
+            return {"display": "block"}
+        return {"display": "none"}
+
     @app.callback(
         [Output("naics-tree", "children"),
          Output("naics-active-filters", "children")],
@@ -345,42 +378,74 @@ def register_callbacks(app):
             
             logger.info(f"Clicked item: type={clicked_type}, id={clicked_id}")
             
-            # Get the selected item's data from the taxonomy database
-            with get_db_connection() as conn:  # This is the SQLite connection
-                cursor = conn.cursor()
-                if clicked_type == "subcategory-item":
-                    logger.info(f"Querying taxonomy for subcategory: {clicked_id}")
-                    cursor.execute("""
-                        SELECT * FROM taxonomy 
-                        WHERE subcategory = ? 
-                        LIMIT 1
-                    """, (clicked_id,))  # Removed the sub_subcategory condition
-                    
-                else:  # sub-subcategory-item
-                    logger.info(f"Querying taxonomy for sub-subcategory: {clicked_id}")
-                    cursor.execute("""
-                        SELECT * FROM taxonomy 
-                        WHERE sub_subcategory = ?
-                        LIMIT 1
-                    """, (clicked_id,))
+            # Get the selected item's data from the taxonomy data
+            if clicked_type == "subcategory-item":
+                logger.info(f"Getting data for subcategory: {clicked_id}")
+                items = filter_taxonomy({'Subcategory': clicked_id})
+                logger.info(f"Found {len(items)} items for subcategory")
+                if not items:
+                    return "No details available for this selection (no matching subcategory)", None
                 
-                item = cursor.fetchone()
+                item = items[0]
+                # Extract NAICS code from the correct field
+                code = str(item.get('NAICS Code', ''))
+                logger.info(f"Using NAICS code from subcategory: {code}")
                 
-                if not item:
-                    logger.warning(f"No data found in taxonomy for {clicked_type} with id {clicked_id}")
-                    return "No details available for this selection", None
+                # Create a properly structured item for the details panel
+                formatted_item = {
+                    'category': item.get('Category', ''),
+                    'subcategory': item.get('Subcategory', ''),
+                    'sub_subcategory': None,
+                    'naics_code': code,
+                    'naics_description': item.get('NAICS Description', ''),
+                    'sub_naics_code': None,
+                    'sub_naics_description': None,
+                    'function': item.get('Function', ''),
+                    'supply_chain_position': item.get('Supply Chain Position', ''),
+                    'trl': item.get('TRL', ''),
+                    'potential_applications': item.get('Potential Applications', '')
+                }
                 
-                # Get the NAICS code from the taxonomy item
-                code = item['sub_naics_code'] if clicked_type == "sub-subcategory-item" else item['naics_code']
-                logger.info(f"Found NAICS code in taxonomy: {code}")
+            else:  # sub-subcategory-item
+                logger.info(f"Getting data for sub-subcategory: {clicked_id}")
+                items = filter_taxonomy({'Potential Sub-Subcategory': clicked_id})
+                logger.info(f"Found {len(items)} items for sub-subcategory")
+                if not items:
+                    return "No details available for this selection (no matching sub-subcategory)", None
                 
-                # Now get matching companies from the MySQL database
-                companies = get_companies_for_naics(code, "revenue")  # Default to revenue sorting
+                item = items[0]
+                # For sub-subcategories, use the Sub-Subcategory NAICS Code
+                code = str(item.get('Sub-Subcategory NAICS Code', ''))
+                if code == 'N/A':
+                    code = str(item.get('NAICS Code', ''))
+                logger.info(f"Using NAICS code from sub-subcategory: {code}")
                 
-                return create_details_panel(item, companies), code
+                # Create a properly structured item for the details panel
+                formatted_item = {
+                    'category': item.get('Category', ''),
+                    'subcategory': item.get('Subcategory', ''),
+                    'sub_subcategory': item.get('Potential Sub-Subcategory', ''),
+                    'naics_code': str(item.get('NAICS Code', '')),
+                    'naics_description': item.get('NAICS Description', ''),
+                    'sub_naics_code': code if code != 'N/A' else None,
+                    'sub_naics_description': item.get('Sub-Subcategory NAICS Description', ''),
+                    'function': item.get('Function', ''),
+                    'supply_chain_position': item.get('Supply Chain Position', ''),
+                    'trl': item.get('TRL', ''),
+                    'potential_applications': item.get('Potential Applications', '')
+                }
+            
+            logger.info(f"Using NAICS code for company search: {code}")
+            # Get matching companies using the JSON-based function
+            companies = get_companies_for_naics(code, "revenue")  # Default to revenue sorting
+            logger.info(f"Found {len(companies)} matching companies")
+            
+            return create_details_panel(formatted_item, companies), code
                 
         except Exception as e:
             logger.error(f"Error updating details: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             return f"Error loading details: {str(e)}", None
 
     # Add callback for filter mode toggle
@@ -421,144 +486,87 @@ def register_callbacks(app):
     @app.callback(
         [Output("value-column", "children"),
          Output("rankings-table", "children")],
-        [Input({"type": "ranking-criteria", "value": ALL}, "n_clicks")],
-        [State("current-naics-code", "data")],
-        prevent_initial_call=False
+        [Input({"type": "ranking-criteria", "value": ALL}, "n_clicks"),
+         Input("current-naics-code", "data")],
+        prevent_initial_call=True
     )
     def update_rankings(n_clicks, current_naics_code):
-        if not dash.callback_context.triggered or not any(n_clicks):
-            return update_table("revenue", current_naics_code)
+        """Update company rankings based on selected criteria"""
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+            
+        # Get the criteria from the button that was clicked, or use the default
+        criteria = 'revenue'  # default
+        if ctx.triggered[0]['prop_id'].split('.')[0] != 'current-naics-code':
+            try:
+                button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+                criteria = json.loads(button_id)['value'].lower()
+            except:
+                pass
         
-        triggered = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-        criteria = json.loads(triggered)['value']
+        if not current_naics_code:
+            return "No NAICS code selected", []
+            
+        logger.info(f"Updating rankings for NAICS {current_naics_code} with criteria {criteria}")
         
-        return update_table(criteria, current_naics_code)
-
-    def update_table(criteria, naics_code=None):
-        """Update table header and content based on selected criteria and NAICS code"""
-        logger.info(f"Updating table with criteria: {criteria}, NAICS code: {naics_code}")
-        
-        header = {
-            "revenue": "Revenue ($B)",
-            "market_cap": "Market Cap ($B)",
-            "yoy_growth": "YoY Growth (%)",
-            "market_share": "Market Share (%)"
-        }[criteria]
+        # Get header based on criteria
+        header = get_ranking_header(criteria)
         
         try:
-            conn = get_company_rankings_db_connection()
-            if conn is None:
-                return header, [html.Tr([html.Td("Company database not available", colSpan=4)])]
+            # Get companies using the JSON-based function
+            companies = get_companies_for_naics(current_naics_code, criteria)
             
-            cursor = conn.cursor(dictionary=True)
+            if not companies:
+                return header, [html.Tr([html.Td("No companies found for this NAICS code", colSpan=4)])]
             
-            # Updated query for the new table structure
-            query = """
-                SELECT Company_Name as company_name,
-                       Country as country,
-                       {} as value
-                FROM top_global_firms
-                WHERE NAICS_Codes LIKE %s
-                ORDER BY {} DESC
-                LIMIT 10
-            """.format(criteria, criteria)
+            # Check if any company has the selected criteria
+            field_mapping = {
+                'revenue': 'Revenue',
+                'market_cap': 'Market_Cap',
+                'yoy_growth': 'YoY_Growth',
+                'market_share': 'Market_Share',
+                'r&d_spending': 'R&D_Spending_Percentage'
+            }
+            json_field = field_mapping.get(criteria, 'Revenue')
             
-            # Use wildcards to match NAICS code hierarchy
-            if naics_code:
-                naics_pattern = f"{naics_code[:3]}%"  # Match first 3 digits
-            else:
-                naics_pattern = "%"
-            
-            logger.info(f"Executing query with pattern: {naics_pattern}")
-            cursor.execute(query, (naics_pattern,))
-            companies = cursor.fetchall()
+            # Check if any company has data for the selected criteria
+            has_data = any(company.get(json_field) is not None for company in companies)
+            if not has_data:
+                message = f"No {header} data available for these companies"
+                return header, [html.Tr([html.Td(message, colSpan=4)])]
             
             # Generate table rows
             rows = []
             for idx, company in enumerate(companies, 1):
-                value = company['value']
-                if value is not None:  # Add null check
-                    formatted_value = format_value(value, criteria)
+                value = company.get(json_field)
+                formatted_value = format_value(value, criteria)
+                
+                # Skip companies with no data for the selected criteria
+                if value is None:
+                    continue
                     
-                    row = html.Tr([
-                        html.Td(str(idx)),
-                        html.Td(company['company_name']),
-                        html.Td(company['country']),
-                        html.Td(formatted_value)
-                    ])
-                    rows.append(row)
-            
-            cursor.close()
-            conn.close()
+                row = html.Tr([
+                    html.Td(str(idx)),
+                    html.Td(company.get('Company_Name', 'N/A')),
+                    html.Td(company.get('Country', 'N/A')),
+                    html.Td(formatted_value)
+                ])
+                rows.append(row)
             
             if not rows:
-                return header, [html.Tr([html.Td("No companies found for this NAICS code", colSpan=4)])]
+                return header, [html.Tr([html.Td(f"No {criteria} data available", colSpan=4)])]
+            
+            logger.info(f"Created {len(rows)} table rows")
             return header, rows
             
-        except Error as e:
-            logger.error(f"Database error in update_table: {e}")
+        except Exception as e:
+            logger.error(f"Error updating rankings: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return header, [html.Tr([html.Td(f"Error loading company data: {str(e)}", colSpan=4)])]
 
-    def format_value(value, criteria):
-        """Format value based on criteria type"""
-        if criteria == "revenue" or criteria == "market_cap":
-            return f"${value:.1f}B"
-        elif criteria == "yoy_growth":
-            return f"{value:.1f}%"
-        else:  # proprietary_rank
-            return str(int(value))
-
-def get_company_rankings_db_connection():
-    """Create a connection to the top_global_firms database"""
-    try:
-        connection = mysql.connector.connect(
-            host=os.getenv('MYSQL_HOST', 'localhost'),
-            user=os.getenv('MYSQL_USER', 'root'),
-            password=os.getenv('MYSQL_PASSWORD', ''),
-            database=os.getenv('MYSQL_DATABASE', 'top_global_firms')
-        )
-        return connection
-    except Error as e:
-        logger.error(f"Error connecting to MySQL Database: {e}")
-        # Fallback to empty data if database is not available
-        return None
-
-def get_companies_for_naics(naics_code, sort_by="revenue"):
-    """Get companies from MySQL database matching a NAICS code"""
-    try:
-        conn = get_company_rankings_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # Updated query to work with the top_global_firms table structure
-        query = """
-            SELECT Company_Name as company_name, 
-                   Country as country,
-                   Revenue as revenue,
-                   Market_Cap as market_cap,
-                   Market_Share as market_share,
-                   YoY_Growth as yoy_growth
-            FROM top_global_firms
-            WHERE NAICS_Codes LIKE %s
-            ORDER BY {} DESC
-            LIMIT 10
-        """.format(sort_by)
-        
-        # Try exact match first
-        cursor.execute(query, (naics_code,))
-        companies = cursor.fetchall()
-        
-        # If no results, try broader match
-        if not companies and len(naics_code) > 3:
-            cursor.execute(query, (naics_code[:3] + '%',))
-            companies = cursor.fetchall()
-        
-        cursor.close()
-        conn.close()
-        return companies
-        
-    except Error as e:
-        logger.error(f"Error getting companies for NAICS {naics_code}: {e}")
-        return []
+    # Rest of the callbacks...
 
 def create_details_panel(item, companies):
     """Create the details panel with taxonomy info and company rankings"""
@@ -590,63 +598,10 @@ def create_details_panel(item, companies):
                 html.H5("Potential Applications", className="mt-3"),
                 html.P(item['potential_applications']),
             ])
-        ], className="mb-3"),
-        
-        # Companies Card
-        dbc.Card([
-            dbc.CardHeader([
-                html.H4("Top Corporations", className="d-inline"),
-                dbc.ButtonGroup([
-                    dbc.Button(
-                        "Revenue",
-                        id={"type": "ranking-criteria", "value": "revenue"},
-                        color="primary",
-                        size="sm",
-                        className="me-1",
-                        active=True
-                    ),
-                    dbc.Button(
-                        "Market Cap",
-                        id={"type": "ranking-criteria", "value": "market_cap"},
-                        color="primary",
-                        size="sm",
-                        className="me-1",
-                        outline=True
-                    ),
-                    dbc.Button(
-                        "YoY Growth",
-                        id={"type": "ranking-criteria", "value": "yoy_growth"},
-                        color="primary",
-                        size="sm",
-                        className="me-1",
-                        outline=True
-                    ),
-                    dbc.Button(
-                        "Proprietary Rank",
-                        id={"type": "ranking-criteria", "value": "proprietary_rank"},
-                        color="primary",
-                        size="sm",
-                        outline=True
-                    )
-                ], className="float-end")
-            ]),
-            dbc.CardBody([
-                dbc.Table([
-                    html.Thead([
-                        html.Tr([
-                            html.Th("Rank"),
-                            html.Th("Company"),
-                            html.Th("Country"),
-                            html.Th("Revenue ($B)", id="value-column")  # Dynamic header
-                        ])
-                    ]),
-                    html.Tbody(id="rankings-table")  # Dynamic content
-                ], bordered=True, hover=True, size="sm")
-            ])
-        ])
+        ], className="mb-3")
     ])
 
-# Create the layout - fix indentation by moving it to module level
+# Create the layout
 naics_layout = dbc.Container([
     # Add Font Awesome
     html.Link(
@@ -674,25 +629,25 @@ naics_layout = dbc.Container([
                             "AND",
                             id="filter-mode-and",
                             color="primary",
-                            outline=True,  # Add outline style
+                            outline=True,
                             active=True,
                             className="me-1",
-                            style={'width': '80px'}  # Fixed width for better appearance
+                            style={'width': '80px'}
                         ),
                         dbc.Button(
                             "OR",
                             id="filter-mode-or",
                             color="primary",
-                            outline=True,  # Add outline style
+                            outline=True,
                             active=False,
-                            style={'width': '80px'}  # Fixed width for better appearance
+                            style={'width': '80px'}
                         ),
                     ],
-                    className="mb-3 d-flex justify-content-center"  # Center the buttons
+                    className="mb-3 d-flex justify-content-center"
                 ),
                 html.Small("AND: All filters must match • OR: Any filter can match", 
-                          className="text-muted d-block text-center mb-3")  # Add explanation
-            ], className="text-center"),  # Center the entire filter mode section
+                          className="text-muted d-block text-center mb-3")
+            ], className="text-center"),
             dbc.Row([
                 # Function Filters
                 dbc.Col([
@@ -708,7 +663,7 @@ naics_layout = dbc.Container([
                                    color="danger", outline=True, size="sm", n_clicks=0)
                     ], className="mb-2")
                 ], width=4),
-                # Updated TRL Filters
+                # TRL Filters
                 dbc.Col([
                     html.H6("TRL:", className="mb-2"),
                     dbc.ButtonGroup([
@@ -758,23 +713,88 @@ naics_layout = dbc.Container([
             ], className="text-center")
         ])
     ], className="mb-4"),
-    # Existing Row with Tree and Details
+    # Tree and Details
     dbc.Row([
         dbc.Col([
             html.Div(
-                generate_naics_tree(),  # No argument needed, will load from database
+                generate_naics_tree(),
                 id="naics-tree",
                 className="border rounded p-3"
             )
         ], width=4),
         dbc.Col([
-            html.Div(
-                "Select a subcategory to view details",
-                id="naics-details-panel",
-                className="border rounded p-3"
-            )
+            html.Div([
+                html.Div(
+                    "Select a subcategory to view details",
+                    id="naics-details-panel",
+                    className="border rounded p-3"
+                ),
+                # Rankings table
+                dbc.Card([
+                    dbc.CardHeader([
+                        html.H4("Top Corporations", className="d-inline"),
+                        dbc.ButtonGroup([
+                            dbc.Button(
+                                "Revenue",
+                                id={"type": "ranking-criteria", "value": "revenue"},
+                                color="primary",
+                                size="sm",
+                                className="me-1",
+                                active=True
+                            ),
+                            dbc.Button(
+                                "Market Cap",
+                                id={"type": "ranking-criteria", "value": "market_cap"},
+                                color="primary",
+                                size="sm",
+                                className="me-1",
+                                outline=True
+                            ),
+                            dbc.Button(
+                                "YoY Growth",
+                                id={"type": "ranking-criteria", "value": "yoy_growth"},
+                                color="primary",
+                                size="sm",
+                                className="me-1",
+                                outline=True
+                            ),
+                            dbc.Button(
+                                "Market Share",
+                                id={"type": "ranking-criteria", "value": "market_share"},
+                                color="primary",
+                                size="sm",
+                                className="me-1",
+                                outline=True
+                            ),
+                            dbc.Button(
+                                "R&D Spending",
+                                id={"type": "ranking-criteria", "value": "r&d_spending"},
+                                color="primary",
+                                size="sm",
+                                outline=True
+                            )
+                        ], className="float-end")
+                    ]),
+                    dbc.CardBody([
+                        dbc.Table([
+                            html.Thead([
+                                html.Tr([
+                                    html.Th("Rank"),
+                                    html.Th("Company"),
+                                    html.Th("Country"),
+                                    html.Th("Revenue ($B)", id="value-column")
+                                ])
+                            ]),
+                            html.Tbody([
+                                html.Tr([
+                                    html.Td("Select a subcategory to view company rankings", colSpan=4)
+                                ])
+                            ], id="rankings-table")
+                        ], bordered=True, hover=True, size="sm", className="mb-0")
+                    ])
+                ], className="mt-3", style={"display": "none"}, id="rankings-card")
+            ])
         ], width=8)
     ]),
-    # Add this to the layout
     dcc.Store(id="current-naics-code", data=None),
 ])
