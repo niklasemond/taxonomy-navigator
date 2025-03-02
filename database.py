@@ -3,11 +3,14 @@ from contextlib import contextmanager
 import logging
 import os
 import json
+from pathlib import Path
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Use /tmp directory on Render for database storage
-DATABASE_PATH = os.environ.get('DATABASE_PATH', '/tmp/taxonomy.db')
+# Use /tmp directory for Render deployment
+DATABASE_PATH = '/tmp/taxonomy.db'
 
 @contextmanager
 def get_db_connection():
@@ -120,143 +123,146 @@ def init_database():
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            # Create taxonomy table if it doesn't exist
+            # Create taxonomy table with correct schema
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS taxonomy (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    category TEXT,
-                    subcategory TEXT,
-                    naics_code TEXT,
-                    naics_description TEXT,
-                    sub_subcategory TEXT,
-                    sub_naics_code TEXT,
-                    sub_naics_description TEXT,
-                    function TEXT,
-                    supply_chain_position TEXT,
-                    trl TEXT,
-                    potential_applications TEXT
+                    Category TEXT,
+                    Subcategory TEXT,
+                    "NAICS Code" INTEGER,
+                    "NAICS Description" TEXT,
+                    "Potential Sub-Subcategory" TEXT,
+                    "Sub-Subcategory NAICS Code" TEXT,
+                    "Sub-Subcategory NAICS Description" TEXT,
+                    "Potential Applications" TEXT,
+                    "Function" TEXT,
+                    "Supply Chain Position" TEXT,
+                    "TRL" TEXT
                 )
             ''')
             
-            # Create top_global_firms table if it doesn't exist
+            # Create top_global_firms table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS top_global_firms (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Company_Name TEXT,
                     Country TEXT,
+                    Revenue REAL,
+                    Market_Cap REAL,
+                    YoY_Growth REAL,
+                    Description TEXT,
                     NAICS_Codes TEXT,
-                    revenue REAL,
-                    market_cap REAL,
-                    yoy_growth REAL,
-                    market_share REAL
+                    Market_Share REAL,
+                    Patents_Last_Year INTEGER,
+                    R_and_D_Spending_Percentage REAL
                 )
             ''')
             
             conn.commit()
-            logger.info("Database initialized successfully")
-            
+            logger.info("Database tables created successfully")
     except Exception as e:
-        logger.error(f"Error initializing database: {str(e)}")
+        logger.error(f"Error creating database tables: {e}")
         raise
 
 def import_json_to_db(json_file_path):
     """Import data from a JSON file into the database."""
     try:
-        # Try to open and read the JSON file
+        # Try the direct path first
         if not os.path.exists(json_file_path):
-            # Try relative paths if absolute path doesn't exist
-            relative_path = os.path.join(os.path.dirname(__file__), os.path.basename(json_file_path))
-            alt_path = os.path.join('data', os.path.basename(json_file_path))
-            
-            if os.path.exists(relative_path):
-                json_file_path = relative_path
-            elif os.path.exists(alt_path):
+            # Try looking in the data directory relative to the current file
+            alt_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'taxonomy.json')
+            if os.path.exists(alt_path):
                 json_file_path = alt_path
             else:
-                raise FileNotFoundError(f"JSON file not found at any of these locations: {json_file_path}, {relative_path}, {alt_path}")
-        
-        with open(json_file_path, 'r') as f:
-            data = json.load(f)
-        
+                raise FileNotFoundError(f"Could not find taxonomy.json in {json_file_path} or {alt_path}")
+
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
+
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
             # Clear existing data
-            cursor.execute("DELETE FROM taxonomy")
+            cursor.execute('DELETE FROM taxonomy')
             
             # Insert new data
             for item in data:
-                cursor.execute("""
+                cursor.execute('''
                     INSERT INTO taxonomy (
-                        category, subcategory, naics_code, naics_description,
-                        sub_subcategory, sub_naics_code, sub_naics_description,
-                        function, supply_chain_position, trl, potential_applications
+                        Category, Subcategory, "NAICS Code", "NAICS Description",
+                        "Potential Sub-Subcategory", "Sub-Subcategory NAICS Code",
+                        "Sub-Subcategory NAICS Description", "Potential Applications",
+                        "Function", "Supply Chain Position", "TRL"
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    item.get('Category', ''),
-                    item.get('Subcategory', ''),
-                    str(item.get('NAICS Code', '')),
-                    item.get('NAICS Description', ''),
-                    item.get('Potential Sub-Subcategory', 'N/A') if item.get('Potential Sub-Subcategory') != 'N/A' else None,
-                    item.get('Sub-Subcategory NAICS Code', 'N/A') if item.get('Sub-Subcategory NAICS Code') != 'N/A' else None,
-                    item.get('Sub-Subcategory NAICS Description', 'N/A') if item.get('Sub-Subcategory NAICS Description') != 'N/A' else None,
+                ''', (
+                    item.get('Category'),
+                    item.get('Subcategory'),
+                    item.get('NAICS Code'),
+                    item.get('NAICS Description'),
+                    item.get('Potential Sub-Subcategory'),
+                    item.get('Sub-Subcategory NAICS Code'),
+                    item.get('Sub-Subcategory NAICS Description'),
+                    item.get('Potential Applications'),
                     item.get('Function'),
                     item.get('Supply Chain Position'),
-                    item.get('TRL'),
-                    item.get('Potential Applications')
+                    item.get('TRL')
                 ))
             
             conn.commit()
-            logger.info(f"Successfully imported {len(data)} records from {json_file_path}")
-            
+            logger.info(f"Successfully imported taxonomy data from {json_file_path}")
     except Exception as e:
-        logger.error(f"Error importing JSON data: {str(e)}")
+        logger.error(f"Error importing taxonomy data: {e}")
         raise
 
 def import_companies_to_db(json_file_path):
     """Import company data from JSON file into the database"""
     try:
-        # Check if file exists
+        # Try the direct path first
         if not os.path.exists(json_file_path):
-            # Try looking in the data directory
-            alt_path = os.path.join('data', os.path.basename(json_file_path))
+            # Try looking in the root directory
+            alt_path = os.path.join(os.path.dirname(__file__), '..', 'top_global_firms.json')
             if os.path.exists(alt_path):
                 json_file_path = alt_path
             else:
-                raise FileNotFoundError(f"JSON file not found at {json_file_path} or {alt_path}")
+                raise FileNotFoundError(f"Could not find top_global_firms.json in {json_file_path} or {alt_path}")
+
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        with open(json_file_path, 'r') as f:
-            data = json.load(f)
+        # Clear existing data
+        cursor.execute('DELETE FROM top_global_firms')
         
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Clear existing data
-            cursor.execute("DELETE FROM top_global_firms")
-            
-            # Insert new data
-            for item in data:
-                cursor.execute("""
-                    INSERT INTO top_global_firms (
-                        Company_Name, Country, NAICS_Codes,
-                        revenue, market_cap, yoy_growth, market_share
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    item.get('Company_Name', ''),
-                    item.get('Country', ''),
-                    item.get('NAICS_Codes', ''),
-                    item.get('revenue', 0.0),
-                    item.get('market_cap', 0.0),
-                    item.get('yoy_growth', 0.0),
-                    item.get('market_share', 0.0)
-                ))
-            
-            conn.commit()
-            logger.info(f"Successfully imported {len(data)} company records from {json_file_path}")
-            
-    except Exception as e:
-        logger.error(f"Error importing company data: {str(e)}")
+        # Insert new data
+        for company in data:
+            cursor.execute('''
+                INSERT INTO top_global_firms (
+                    Company_Name, Country, Revenue, Market_Cap, YoY_Growth,
+                    Description, NAICS_Codes, Market_Share, Patents_Last_Year,
+                    R_and_D_Spending_Percentage
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                company.get('Company_Name'),
+                company.get('Country'),
+                company.get('Revenue'),
+                company.get('Market_Cap'),
+                company.get('YoY_Growth'),
+                company.get('Description'),
+                company.get('NAICS_Codes'),
+                company.get('Market_Share'),
+                company.get('Patents_Last_Year'),
+                company.get('R&D_Spending_Percentage')
+            ))
+        
+        conn.commit()
+        logger.info(f"Successfully imported company data from {json_file_path}")
+    except (sqlite3.Error, json.JSONDecodeError, FileNotFoundError) as e:
+        logger.error(f"Error importing company data: {e}")
         raise
+    finally:
+        conn.close()
 
 def get_table_schema():
     """Print the current table schema"""
