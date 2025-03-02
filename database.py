@@ -160,16 +160,20 @@ def init_database():
         raise
 
 def import_json_to_db(json_file_path):
-    """Import data from JSON file into the database"""
+    """Import data from a JSON file into the database."""
     try:
-        # Check if file exists
+        # Try to open and read the JSON file
         if not os.path.exists(json_file_path):
-            # Try looking in the data directory
+            # Try relative paths if absolute path doesn't exist
+            relative_path = os.path.join(os.path.dirname(__file__), os.path.basename(json_file_path))
             alt_path = os.path.join('data', os.path.basename(json_file_path))
-            if os.path.exists(alt_path):
+            
+            if os.path.exists(relative_path):
+                json_file_path = relative_path
+            elif os.path.exists(alt_path):
                 json_file_path = alt_path
             else:
-                raise FileNotFoundError(f"JSON file not found at {json_file_path} or {alt_path}")
+                raise FileNotFoundError(f"JSON file not found at any of these locations: {json_file_path}, {relative_path}, {alt_path}")
         
         with open(json_file_path, 'r') as f:
             data = json.load(f)
