@@ -14,8 +14,8 @@ DATABASE_PATH = '/tmp/taxonomy.db'
 def get_db_connection():
     """Create and return a database connection"""
     try:
-        # Create a data directory if it doesn't exist
-        os.makedirs('data', exist_ok=True)
+        # Ensure database exists
+        ensure_database_exists()
         
         # Connect to SQLite database
         conn = sqlite3.connect(DATABASE_PATH)
@@ -27,13 +27,23 @@ def get_db_connection():
 
 def init_database():
     """Initialize the database and create tables"""
+    conn = None
     try:
-        conn = get_db_connection()
+        # Ensure the /tmp directory exists
+        os.makedirs('/tmp', exist_ok=True)
+        
+        # Create a fresh connection
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+        
+        # Drop existing tables if they exist
+        cursor.execute('DROP TABLE IF EXISTS taxonomy')
+        cursor.execute('DROP TABLE IF EXISTS top_global_firms')
         
         # Create taxonomy table
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS taxonomy (
+            CREATE TABLE taxonomy (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Category TEXT,
                 Subcategory TEXT,
@@ -51,7 +61,7 @@ def init_database():
         
         # Create top_global_firms table
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS top_global_firms (
+            CREATE TABLE top_global_firms (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Company_Name TEXT,
                 Country TEXT,
@@ -68,11 +78,25 @@ def init_database():
         
         conn.commit()
         logger.info("Database tables created successfully")
+        
+        # Verify tables were created
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = cursor.fetchall()
+        logger.info(f"Created tables: {[table[0] for table in tables]}")
+        
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
         raise
     finally:
-        conn.close()
+        if conn:
+            conn.close()
+
+def ensure_database_exists():
+    """Ensure database and tables exist before any operation"""
+    if not os.path.exists(DATABASE_PATH):
+        init_database()
+        return True
+    return False
 
 def import_json_to_db(json_file_path):
     """Import taxonomy data from JSON file"""

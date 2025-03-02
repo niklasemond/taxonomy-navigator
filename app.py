@@ -11,7 +11,7 @@ import secrets
 from secret_key import generate_secret_key
 from auth import User, users, init_login_manager
 from werkzeug.security import check_password_hash
-from database import init_database, import_json_to_db, import_companies_to_db
+from database import init_database, import_json_to_db, import_companies_to_db, get_db_connection
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,22 +29,31 @@ class User(UserMixin):
 
 # Initialize database and import data at startup
 try:
-    # Initialize database first
+    # Initialize database and create tables
     init_database()
     logger.info("Database initialized successfully")
     
     # Import taxonomy data
-    import_json_to_db('data/taxonomy.json')
+    taxonomy_path = os.path.join(os.path.dirname(__file__), 'data', 'taxonomy.json')
+    import_json_to_db(taxonomy_path)
     logger.info("Taxonomy data imported successfully")
     
     # Import company data
-    import_companies_to_db('top_global_firms.json')
+    companies_path = os.path.join(os.path.dirname(__file__), 'top_global_firms.json')
+    import_companies_to_db(companies_path)
     logger.info("Company data imported successfully")
+    
+    # Verify database setup
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM taxonomy")
+        count = cursor.fetchone()[0]
+        logger.info(f"Verified taxonomy table with {count} records")
 except Exception as e:
     logger.error(f"Error during initialization: {e}")
-    # Continue execution even if import fails
-    pass
-
+    # Log the full error details
+    logger.exception("Full error details:")
+    
 # Initialize the main app
 try:
     app = dash.Dash(
