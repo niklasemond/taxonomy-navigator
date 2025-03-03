@@ -578,25 +578,31 @@ def create_details_panel(item, companies):
     return html.Div([
         # Taxonomy Details Card
         dbc.Card([
-            dbc.CardHeader(html.H4(title)),
+            dbc.CardHeader(html.H4(title, className="details-title")),
             dbc.CardBody([
-                html.H5("NAICS Information"),
-                html.P([
-                    html.Strong("Code: "),
-                    html.Span(code),
-                ]),
-                html.P([
-                    html.Strong("Description: "),
-                    html.Span(description),
-                ]),
-                html.H5("Classification", className="mt-3"),
                 html.Div([
-                    create_badge("Function", item['function']),
-                    create_badge("Supply Chain", item['supply_chain_position']),
-                    create_badge("TRL", item['trl']),
-                ]),
-                html.H5("Potential Applications", className="mt-3"),
-                html.P(item['potential_applications']),
+                    html.H5("NAICS Information", className="details-section-title"),
+                    html.P([
+                        html.Strong("Code: "),
+                        html.Span(code, className="text-primary"),
+                    ]),
+                    html.P([
+                        html.Strong("Description: "),
+                        html.Span(description),
+                    ]),
+                ], className="details-section"),
+                html.Div([
+                    html.H5("Classification", className="details-section-title"),
+                    html.Div([
+                        create_badge("Function", item['function']),
+                        create_badge("Supply Chain", item['supply_chain_position']),
+                        create_badge("TRL", item['trl']),
+                    ]),
+                ], className="details-section"),
+                html.Div([
+                    html.H5("Potential Applications", className="details-section-title"),
+                    html.P(item['potential_applications']),
+                ], className="details-section")
             ])
         ], className="mb-3")
     ])
@@ -608,21 +614,19 @@ naics_layout = dbc.Container([
         rel="stylesheet",
         href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
     ),
-    # Replace html.Style with dbc.Container for CSS
-    dbc.Container([
-        html.Link(
-            rel='stylesheet',
-            href='/assets/style.css'
-        )
-    ]),
+    # Add custom CSS
+    html.Link(
+        rel='stylesheet',
+        href='/assets/style.css'
+    ),
     html.H1("NAICS Taxonomy Navigator", className="my-4"),
     # Add Filter Panel
     dbc.Card([
         dbc.CardBody([
-            html.H5("Filters", className="card-title"),
+            html.H5("Filters", className="filter-title"),
             # Updated filter mode selection
             html.Div([
-                html.H6("Filter Mode:", className="mb-2"),
+                html.H6("Filter Mode:", className="filter-group-title"),
                 dbc.ButtonGroup(
                     [
                         dbc.Button(
@@ -651,7 +655,7 @@ naics_layout = dbc.Container([
             dbc.Row([
                 # Function Filters
                 dbc.Col([
-                    html.H6("Function:", className="mb-2"),
+                    html.H6("Function:", className="filter-group-title"),
                     dbc.ButtonGroup([
                         dbc.Button("CF", id={'type': 'function-filter', 'value': 'CF'}, 
                                    color="primary", outline=True, size="sm", className="me-1", n_clicks=0),
@@ -665,7 +669,7 @@ naics_layout = dbc.Container([
                 ], width=4),
                 # TRL Filters
                 dbc.Col([
-                    html.H6("TRL:", className="mb-2"),
+                    html.H6("TRL:", className="filter-group-title"),
                     dbc.ButtonGroup([
                         dbc.Button("1", id={'type': 'trl-filter', 'value': '1'}, 
                                    color="danger", outline=True, size="sm", className="me-1", n_clicks=0),
@@ -689,7 +693,7 @@ naics_layout = dbc.Container([
                 ], width=4),
                 # Supply Chain Filters
                 dbc.Col([
-                    html.H6("Supply Chain:", className="mb-2"),
+                    html.H6("Supply Chain:", className="filter-group-title"),
                     dbc.ButtonGroup([
                         dbc.Button("RMC", id={'type': 'supply-chain-filter', 'value': 'RMC'}, 
                                    color="primary", outline=True, size="sm", className="me-1", n_clicks=0),
@@ -706,7 +710,7 @@ naics_layout = dbc.Container([
             ]),
             # Active Filters Display
             html.Div([
-                html.H6("Active Filters:", className="mt-3 mb-2"),
+                html.H6("Active Filters:", className="filter-group-title"),
                 html.Div(id="naics-active-filters", className="mb-2"),
                 dbc.Button("Clear All Filters", id="naics-clear-filters", 
                           color="secondary", size="sm", className="mt-2")
@@ -719,7 +723,7 @@ naics_layout = dbc.Container([
             html.Div(
                 generate_naics_tree(),
                 id="naics-tree",
-                className="border rounded p-3"
+                className="naics-tree border rounded p-3"
             )
         ], width=4),
         dbc.Col([
@@ -727,19 +731,19 @@ naics_layout = dbc.Container([
                 html.Div(
                     "Select a subcategory to view details",
                     id="naics-details-panel",
-                    className="border rounded p-3"
+                    className="details-panel"
                 ),
                 # Rankings table
                 dbc.Card([
                     dbc.CardHeader([
-                        html.H4("Top Corporations", className="d-inline"),
+                        html.H4("Top Corporations", className="rankings-title d-inline"),
                         dbc.ButtonGroup([
                             dbc.Button(
                                 "Revenue",
                                 id={"type": "ranking-criteria", "value": "revenue"},
                                 color="primary",
                                 size="sm",
-                                className="me-1",
+                                className="me-1 ranking-criteria-btn",
                                 active=True
                             ),
                             dbc.Button(
@@ -747,7 +751,7 @@ naics_layout = dbc.Container([
                                 id={"type": "ranking-criteria", "value": "market_cap"},
                                 color="primary",
                                 size="sm",
-                                className="me-1",
+                                className="me-1 ranking-criteria-btn",
                                 outline=True
                             ),
                             dbc.Button(
@@ -755,7 +759,7 @@ naics_layout = dbc.Container([
                                 id={"type": "ranking-criteria", "value": "yoy_growth"},
                                 color="primary",
                                 size="sm",
-                                className="me-1",
+                                className="me-1 ranking-criteria-btn",
                                 outline=True
                             ),
                             dbc.Button(
@@ -763,7 +767,7 @@ naics_layout = dbc.Container([
                                 id={"type": "ranking-criteria", "value": "market_share"},
                                 color="primary",
                                 size="sm",
-                                className="me-1",
+                                className="me-1 ranking-criteria-btn",
                                 outline=True
                             ),
                             dbc.Button(
@@ -771,6 +775,7 @@ naics_layout = dbc.Container([
                                 id={"type": "ranking-criteria", "value": "r&d_spending"},
                                 color="primary",
                                 size="sm",
+                                className="ranking-criteria-btn",
                                 outline=True
                             )
                         ], className="float-end")
@@ -792,7 +797,7 @@ naics_layout = dbc.Container([
                             ], id="rankings-table")
                         ], bordered=True, hover=True, size="sm", className="mb-0")
                     ])
-                ], className="mt-3", style={"display": "none"}, id="rankings-card")
+                ], className="rankings-card mt-3", style={"display": "none"}, id="rankings-card")
             ])
         ], width=8)
     ]),

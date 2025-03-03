@@ -1,3 +1,259 @@
+/* Main container styles */
+.container {
+    max-width: 1400px;
+    padding: 20px;
+}
+
+/* Header styles */
+h1 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding: 15px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Button styles */
+.btn {
+    border-radius: 4px;
+    padding: 8px 16px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-outline-primary {
+    border-width: 2px;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Badge styles */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+    padding: 12px;
+}
+
+.table td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Filter section styles */
+.filter-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.filter-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-group-title {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+/* Tree view styles */
+.naics-tree {
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.naics-tree::-webkit-scrollbar {
+    width: 8px;
+}
+
+.naics-tree::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.naics-tree::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.naics-tree::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Subcategory and sub-subcategory styles */
+.subcategory-content, .sub-subcategory-item {
+    padding: 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.subcategory-content:hover, .sub-subcategory-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Details panel styles */
+.details-panel {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.details-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.details-section {
+    margin-bottom: 20px;
+}
+
+.details-section-title {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+/* Rankings table styles */
+.rankings-card {
+    margin-top: 20px;
+}
+
+.rankings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.rankings-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .table th, .table td {
+        padding: 8px;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .btn {
+        margin: 2px;
+    }
+}
+
+/* Animation for collapsible sections */
+.collapse {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Active filter badge styles */
+.active-filter {
+    display: inline-block;
+    margin: 4px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    color: #495057;
+    font-size: 0.9em;
+}
+
+/* Ranking criteria button styles */
+.ranking-criteria-btn {
+    margin: 2px;
+    min-width: 100px;
+}
+
+.ranking-criteria-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Loading state styles */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Error message styles */
+.error-message {
+    color: #dc3545;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #f8d7da;
+    margin: 10px 0;
+}
+
 .subcategory-item:hover {
     background-color: #f8f9fa !important;
     cursor: pointer;
