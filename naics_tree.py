@@ -403,7 +403,8 @@ def register_callbacks(app):
                     'function': item.get('Function', ''),
                     'supply_chain_position': item.get('Supply Chain Position', ''),
                     'trl': item.get('TRL', ''),
-                    'potential_applications': item.get('Potential Applications', '')
+                    'potential_applications': item.get('Potential Applications', ''),
+                    'Wiki': item.get('Wiki', None)  # Add Wiki field
                 }
                 
             else:  # sub-subcategory-item
@@ -432,7 +433,8 @@ def register_callbacks(app):
                     'function': item.get('Function', ''),
                     'supply_chain_position': item.get('Supply Chain Position', ''),
                     'trl': item.get('TRL', ''),
-                    'potential_applications': item.get('Potential Applications', '')
+                    'potential_applications': item.get('Potential Applications', ''),
+                    'Wiki': item.get('Wiki', None)  # Add Wiki field
                 }
             
             logger.info(f"Using NAICS code for company search: {code}")
@@ -440,6 +442,12 @@ def register_callbacks(app):
             companies = get_companies_for_naics(code, "revenue")  # Default to revenue sorting
             logger.info(f"Found {len(companies)} matching companies")
             
+            # Log if Wiki link is present
+            if formatted_item.get('Wiki'):
+                logger.info(f"Wiki link found: {formatted_item['Wiki']}")
+            else:
+                logger.info("No Wiki link found for this item")
+                
             return create_details_panel(formatted_item, companies), code
                 
         except Exception as e:
@@ -575,6 +583,24 @@ def create_details_panel(item, companies):
     code = item['sub_naics_code'] if item['sub_subcategory'] else item['naics_code']
     description = item['sub_naics_description'] if item['sub_subcategory'] else item['naics_description']
     
+    # Create Wiki link if available
+    wiki_link = []
+    if item.get('Wiki'):
+        logger.info(f"Creating Wiki link with URL: {item['Wiki']}")
+        wiki_link = [
+            html.P([
+                html.Strong("Wiki: "),
+                html.A(
+                    "View on Wikipedia",
+                    href=item['Wiki'],
+                    target="_blank",
+                    className="text-primary"
+                )
+            ])
+        ]
+    else:
+        logger.info("No Wiki link available for this item")
+    
     return html.Div([
         # Taxonomy Details Card
         dbc.Card([
@@ -590,6 +616,7 @@ def create_details_panel(item, companies):
                         html.Strong("Description: "),
                         html.Span(description),
                     ]),
+                    *wiki_link  # Add Wiki link right after description
                 ], className="details-section"),
                 html.Div([
                     html.H5("Classification", className="details-section-title"),
