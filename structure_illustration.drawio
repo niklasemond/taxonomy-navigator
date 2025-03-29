@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36" version="26.1.3">
   <diagram name="Sida-1" id="fuKgmOUG83cluatKNkWX">
-    <mxGraphModel dx="1193" dy="756" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="954" dy="605" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -28,13 +28,13 @@
             <mxPoint x="360" y="380" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iFKTmHwewYyuTtw9cPjH-11" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.536;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" edge="1" target="iFKTmHwewYyuTtw9cPjH-6">
+        <mxCell id="iFKTmHwewYyuTtw9cPjH-11" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.536;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" target="iFKTmHwewYyuTtw9cPjH-6" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="360" y="329.20000000000005" as="sourcePoint" />
             <mxPoint x="470" y="328" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iFKTmHwewYyuTtw9cPjH-12" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.415;exitY=-0.007;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=0.318;entryY=1.002;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" edge="1" target="iFKTmHwewYyuTtw9cPjH-6">
+        <mxCell id="iFKTmHwewYyuTtw9cPjH-12" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.415;exitY=-0.007;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=0.318;entryY=1.002;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="iFKTmHwewYyuTtw9cPjH-6" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="500.1500000000001" y="510.0000000000001" as="sourcePoint" />
             <mxPoint x="500" y="422.1" as="targetPoint" />
@@ -46,13 +46,13 @@
             <mxPoint x="551.01" y="509.9999999999999" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iFKTmHwewYyuTtw9cPjH-16" value="" style="endArrow=classic;html=1;rounded=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;exitX=1.008;exitY=0.482;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.016;entryY=0.332;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="iFKTmHwewYyuTtw9cPjH-37" edge="1" source="iFKTmHwewYyuTtw9cPjH-38">
+        <mxCell id="iFKTmHwewYyuTtw9cPjH-16" value="" style="endArrow=classic;html=1;rounded=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;exitX=1.008;exitY=0.482;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.016;entryY=0.332;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="iFKTmHwewYyuTtw9cPjH-38" target="iFKTmHwewYyuTtw9cPjH-37" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="690" y="624" as="sourcePoint" />
             <mxPoint x="760" y="623" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iFKTmHwewYyuTtw9cPjH-17" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.656;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=1.003;entryY=0.701;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="iFKTmHwewYyuTtw9cPjH-37" edge="1" target="iFKTmHwewYyuTtw9cPjH-38">
+        <mxCell id="iFKTmHwewYyuTtw9cPjH-17" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.656;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;strokeColor=#A8201A;entryX=1.003;entryY=0.701;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="iFKTmHwewYyuTtw9cPjH-37" target="iFKTmHwewYyuTtw9cPjH-38" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="1049.08" y="675.96" as="sourcePoint" />
             <mxPoint x="830" y="675" as="targetPoint" />
@@ -106,17 +106,29 @@
         <mxCell id="RUvVfAlmBm02Kkci9l_3-4" value="Displaying the top 10 companies" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#143642;labelBackgroundColor=none;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="190" y="274" width="110" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="1gFzbK9YxzkvTkRX6jai-42" value="&lt;div style=&quot;line-height: 160%;&quot;&gt;1. COMPANY A - [RANK VALUE]&lt;div&gt;2. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;3. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;4. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;5. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;6. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;7. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;8. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;9. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;10. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2" vertex="1" parent="1">
+        <mxCell id="1gFzbK9YxzkvTkRX6jai-42" value="&lt;div style=&quot;line-height: 160%;&quot;&gt;1. COMPANY A - [RANK VALUE]&lt;div&gt;2. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;3. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;4. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;5. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;6. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;7. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;8. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;9. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;10. COMPANY A - [RANK VALUE]&lt;/div&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2" parent="1" vertex="1">
           <mxGeometry x="150" y="328" width="190" height="170" as="geometry" />
         </mxCell>
-        <mxCell id="1gFzbK9YxzkvTkRX6jai-44" value="Sub-Subcategory Name&lt;div&gt;Description&lt;/div&gt;&lt;div&gt;NAICS Code&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2" vertex="1" parent="1">
+        <mxCell id="1gFzbK9YxzkvTkRX6jai-44" value="Sub-Subcategory Name&lt;div&gt;Description&lt;/div&gt;&lt;div&gt;NAICS Code&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2" parent="1" vertex="1">
           <mxGeometry x="164" y="158" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="1gFzbK9YxzkvTkRX6jai-45" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" vertex="1" parent="1">
+        <mxCell id="1gFzbK9YxzkvTkRX6jai-45" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" parent="1" vertex="1">
           <mxGeometry x="387" y="100" width="543" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="1gFzbK9YxzkvTkRX6jai-46" value="&lt;div&gt;&lt;p class=&quot;p1&quot;&gt;&lt;b&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&lt;u&gt;Ranking Flow (Default + Updated Criteria)&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;&lt;/div&gt;&lt;ol&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/u&gt; Passes NAICS code + default ranking criteria to the &lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;.&lt;/u&gt;&amp;nbsp;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;&lt;/u&gt; queries the &lt;u&gt;&lt;b&gt;Companies Data Base&lt;/b&gt;&lt;/u&gt; for Companies matching the NAICS Code.&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Companies Data Base&lt;/b&gt;&lt;/u&gt; returns all companies with the relevant NAICS code, including all fields of data (&lt;/font&gt;Caches company dataset per NAICS for future re-ranking)&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; ranks according to default criteria.&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;&lt;/u&gt; returns the top 10 companies&amp;nbsp;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/u&gt; queries by new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; ranks according to new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; returns top 10 according to new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;/ol&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="1gFzbK9YxzkvTkRX6jai-46" value="&lt;div&gt;&lt;p class=&quot;p1&quot;&gt;&lt;b&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&lt;u&gt;Ranking Flow (Default + Updated Criteria)&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;&lt;/div&gt;&lt;ol&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/u&gt; Passes NAICS code + default ranking criteria to the &lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;.&lt;/u&gt;&amp;nbsp;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;&lt;/u&gt; queries the &lt;u&gt;&lt;b&gt;Companies Data Base&lt;/b&gt;&lt;/u&gt; for Companies matching the NAICS Code.&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Companies Data Base&lt;/b&gt;&lt;/u&gt; returns all companies with the relevant NAICS code, including all fields of data (&lt;/font&gt;Caches company dataset per NAICS for future re-ranking)&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; ranks according to default criteria.&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking Module&lt;/b&gt;&lt;/u&gt; returns the top 10 companies&amp;nbsp;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/u&gt; queries by new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; ranks according to new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;u&gt;&lt;b&gt;Ranking module&lt;/b&gt;&lt;/u&gt; returns top 10 according to new ranking criteria&lt;/font&gt;&lt;/li&gt;&lt;/ol&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=12;" parent="1" vertex="1">
           <mxGeometry x="380" y="90" width="540" height="184" as="geometry" />
+        </mxCell>
+        <mxCell id="FqRhPOAEvbaAJd06xQA5-6" value="" style="endArrow=none;dashed=1;html=1;rounded=0;fillColor=#e51400;strokeColor=#B20000;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="370" y="760" as="sourcePoint" />
+            <mxPoint x="370" y="80" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FqRhPOAEvbaAJd06xQA5-7" value="&lt;i&gt;&lt;b&gt;Front-end&lt;/b&gt;&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=light-dark(#ffffff, #ededed);" vertex="1" parent="1">
+          <mxGeometry x="190" y="70" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FqRhPOAEvbaAJd06xQA5-8" value="&lt;i&gt;&lt;b&gt;Back-end&lt;/b&gt;&lt;/i&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="506" y="70" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
