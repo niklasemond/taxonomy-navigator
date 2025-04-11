@@ -527,6 +527,10 @@ def get_companies_for_naics(naics_code, sort_by="revenue"):
     """Get companies from MySQL database matching a NAICS code"""
     try:
         conn = get_company_rankings_db_connection()
+        if conn is None:
+            logger.warning("Company database not available")
+            return []
+            
         cursor = conn.cursor(dictionary=True)
         
         # Updated query to work with the top_global_firms table structure
