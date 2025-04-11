@@ -1,6 +1,8 @@
 import sqlite3
 from contextlib import contextmanager
 import logging
+import os
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -108,14 +110,28 @@ def get_distinct_values(field):
         return [row[0] for row in cursor.fetchall()]
 
 def init_database():
-    """Initialize the database and create the taxonomy table"""
+    """Initialize the database with schema and data"""
+    # If database already exists, use it
+    if os.path.exists(DATABASE_PATH):
+        logger.info("Using existing database")
+        return
+        
+    # If pre-populated database exists in the same directory, copy it
+    pre_populated_db = os.path.join(os.path.dirname(__file__), 'taxonomy.db')
+    if os.path.exists(pre_populated_db):
+        logger.info("Copying pre-populated database")
+        shutil.copy2(pre_populated_db, DATABASE_PATH)
+        return
+        
+    # Otherwise create new database
+    logger.info("Creating new database")
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS taxonomy (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category TEXT NOT NULL,
-                subcategory TEXT NOT NULL,
+                category TEXT,
+                subcategory TEXT,
                 naics_code TEXT,
                 naics_description TEXT,
                 sub_subcategory TEXT,
@@ -128,6 +144,9 @@ def init_database():
             )
         """)
         conn.commit()
+        
+        # Import data from JSON
+        import_json_to_db('tax_5-1.json')
 
 def import_json_to_db(json_file_path):
     """Import data from JSON file into the database"""
