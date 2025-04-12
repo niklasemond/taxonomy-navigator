@@ -17,6 +17,7 @@ import psycopg2
 from psycopg2 import Error
 import os
 from urllib.parse import urlparse
+import psycopg2.extras
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -451,7 +452,9 @@ def register_callbacks(app):
             if conn is None:
                 return header, [html.Tr([html.Td("Company database not available", colSpan=4)])]
             
-            cursor = conn.cursor(dictionary=True)
+            # Set the cursor factory to return dictionaries
+            conn.cursor_factory = psycopg2.extras.DictCursor
+            cursor = conn.cursor()
             
             # Updated query for the new table structure
             query = """
