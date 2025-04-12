@@ -456,26 +456,35 @@ def register_callbacks(app):
             conn.cursor_factory = psycopg2.extras.DictCursor
             cursor = conn.cursor()
             
-            # Updated query for the new table structure
+            # Updated query with correct column names
             query = """
-                SELECT Company_Name as company_name,
-                       Country as country,
+                SELECT company_name,
+                       country,
                        {} as value
                 FROM top_global_firms
-                WHERE NAICS_Codes LIKE %s
+                WHERE naics_codes LIKE %s
                 ORDER BY {} DESC
                 LIMIT 10
             """.format(criteria, criteria)
             
             # Use wildcards to match NAICS code hierarchy
             if naics_code:
-                naics_pattern = f"{naics_code[:3]}%"  # Match first 3 digits
+                # Try exact match first
+                naics_pattern = naics_code
+                logger.info(f"Trying exact match with pattern: {naics_pattern}")
+                cursor.execute(query, (naics_pattern,))
+                companies = cursor.fetchall()
+                
+                # If no results, try broader match
+                if not companies and len(naics_code) > 3:
+                    naics_pattern = f"{naics_code[:3]}%"  # Match first 3 digits
+                    logger.info(f"No exact matches, trying broader match with: {naics_pattern}")
+                    cursor.execute(query, (naics_pattern,))
+                    companies = cursor.fetchall()
             else:
                 naics_pattern = "%"
-            
-            logger.info(f"Executing query with pattern: {naics_pattern}")
-            cursor.execute(query, (naics_pattern,))
-            companies = cursor.fetchall()
+                cursor.execute(query, (naics_pattern,))
+                companies = cursor.fetchall()
             
             # Generate table rows
             rows = []
