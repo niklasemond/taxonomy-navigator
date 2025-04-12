@@ -13,9 +13,10 @@ from database import (
 )
 import logging
 import random  # Add at the top of the file
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+from psycopg2 import Error
 import os
+from urllib.parse import urlparse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -374,7 +375,7 @@ def register_callbacks(app):
                 code = item['sub_naics_code'] if clicked_type == "sub-subcategory-item" else item['naics_code']
                 logger.info(f"Found NAICS code in taxonomy: {code}")
                 
-                # Now get matching companies from the MySQL database
+                # Now get matching companies from the PostgreSQL database
                 companies = get_companies_for_naics(code, "revenue")  # Default to revenue sorting
                 
                 return create_details_panel(item, companies), code
@@ -511,41 +512,66 @@ def register_callbacks(app):
 def get_company_rankings_db_connection():
     """Create a connection to the top_global_firms database"""
     try:
-        connection = mysql.connector.connect(
-            host=os.getenv('MYSQL_HOST', 'localhost'),
-            user=os.getenv('MYSQL_USER', 'root'),
-            password=os.getenv('MYSQL_PASSWORD', ''),
-            database=os.getenv('MYSQL_DATABASE', 'top_global_firms')
+        # Get database URL from environment variable
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            logger.error("DATABASE_URL environment variable not set")
+            return None
+            
+        logger.info(f"Attempting to connect to database with URL: {database_url}")
+        
+        # Parse the database URL
+        result = urlparse(database_url)
+        username = result.username
+        password = result.password
+        database = result.path[1:]
+        hostname = result.hostname
+        port = result.port
+        
+        logger.info(f"Connecting to host: {hostname}, database: {database}, user: {username}")
+        
+        connection = psycopg2.connect(
+            host=hostname,
+            database=database,
+            user=username,
+            password=password,
+            port=port
         )
+        logger.info("Successfully connected to database!")
         return connection
     except Error as e:
-        logger.error(f"Error connecting to MySQL Database: {e}")
-        # Fallback to empty data if database is not available
+        logger.error(f"Error connecting to PostgreSQL Database: {str(e)}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error connecting to database: {str(e)}")
         return None
 
 def get_companies_for_naics(naics_code, sort_by="revenue"):
-    """Get companies from MySQL database matching a NAICS code"""
+    """Get companies from PostgreSQL database matching a NAICS code"""
     try:
+        logger.info(f"Getting companies for NAICS code: {naics_code}")
         conn = get_company_rankings_db_connection()
         if conn is None:
             logger.warning("Company database not available")
             return []
             
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         
-        # Updated query to work with the top_global_firms table structure
+        # Updated query for PostgreSQL
         query = """
-            SELECT Company_Name as company_name, 
-                   Country as country,
-                   Revenue as revenue,
-                   Market_Cap as market_cap,
-                   Market_Share as market_share,
-                   YoY_Growth as yoy_growth
+            SELECT company_name, 
+                   country,
+                   revenue,
+                   market_cap,
+                   market_share,
+                   yoy_growth
             FROM top_global_firms
-            WHERE NAICS_Codes LIKE %s
+            WHERE naics_codes LIKE %s
             ORDER BY {} DESC
             LIMIT 10
         """.format(sort_by)
+        
+        logger.info(f"Executing query: {query} with parameter: {naics_code}")
         
         # Try exact match first
         cursor.execute(query, (naics_code,))
@@ -553,15 +579,32 @@ def get_companies_for_naics(naics_code, sort_by="revenue"):
         
         # If no results, try broader match
         if not companies and len(naics_code) > 3:
+            logger.info(f"No exact matches, trying broader match with: {naics_code[:3]}%")
             cursor.execute(query, (naics_code[:3] + '%',))
             companies = cursor.fetchall()
         
+        # Convert to dictionary format
+        companies_dict = []
+        for company in companies:
+            companies_dict.append({
+                'company_name': company[0],
+                'country': company[1],
+                'revenue': company[2],
+                'market_cap': company[3],
+                'market_share': company[4],
+                'yoy_growth': company[5]
+            })
+        
+        logger.info(f"Found {len(companies_dict)} companies")
         cursor.close()
         conn.close()
-        return companies
+        return companies_dict
         
     except Error as e:
-        logger.error(f"Error getting companies for NAICS {naics_code}: {e}")
+        logger.error(f"Error getting companies for NAICS {naics_code}: {str(e)}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error getting companies: {str(e)}")
         return []
 
 def create_details_panel(item, companies):
