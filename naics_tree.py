@@ -528,14 +528,16 @@ def get_company_rankings_db_connection():
         hostname = result.hostname
         port = result.port
         
-        logger.info(f"Connecting to host: {hostname}, database: {database}, user: {username}")
+        logger.info(f"Connecting to host: {hostname}, database: {database}, user: {username}, port: {port}")
         
+        # Add SSL mode
         connection = psycopg2.connect(
             host=hostname,
             database=database,
             user=username,
             password=password,
-            port=port
+            port=port,
+            sslmode='require'  # Add SSL mode for Render PostgreSQL
         )
         logger.info("Successfully connected to database!")
         return connection
